@@ -1177,12 +1177,21 @@ target_exclusion: --exclude=security-audit
   end line/col) to the 463 non-self-referential results of the previous scan - 0 only-old, 0 only-new. The
   exclusion removed the audit's self-scan and nothing else.
 working_directory: repository root
-target_exclusions: 5, applied AT TARGET SELECTION rather than as a downstream filter
+target_exclusions: 1, applied AT TARGET SELECTION rather than as a downstream filter
   --exclude=security-audit   the audit's own output root, including the pinned rule packs
-  --exclude=blitzy           engineering-process artifacts, outside the audited component surface
-  --exclude=blitzy-docs      engineering-process artifacts, outside the audited component surface
-  --exclude=specs            engineering-process artifacts, outside the audited component surface
-  --exclude=agents           engineering-process artifacts, outside the audited component surface
+  CORRECTED, and the correction is recorded rather than quietly applied. An earlier revision of this
+  field read "5" and listed --exclude=blitzy, --exclude=blitzy-docs, --exclude=specs and
+  --exclude=agents alongside it. That was stale and it MIS-DESCRIBED the scan that produced both
+  Layer 2 artifacts: it contradicted the invocation line above, the exclusion_scope line below, and
+  the process_artifact_roots block further down, all three of which state ONE root. An internally
+  contradictory provenance record is an evidence-integrity defect (E8), so it is fixed at the source
+  of truth rather than reconciled by the reader.
+  MEASURED FROM THE EMITTED ARTIFACTS THEMSELVES, so the correction is falsifiable rather than
+  asserted - counting the top-level directory of every results-semgrep.json paths.scanned entry:
+    agents 105 | specs 67 | blitzy-docs 3 | blitzy 2   (177 targets, 0 results)  -> PRESENT in the scan
+    security-audit 0                                                             -> EXCLUDED
+  Exactly ONE --exclude was therefore in force. The four process-artifact roots were considered and
+  deliberately NOT excluded, for the measured reason recorded under process_artifact_roots below.
 exclusion_rationale: GIT TRACKING - NOT gitignore status - governs Semgrep's target selection.
   The audit artifacts are deliberately committed (force-added) so the evidence travels with the
   branch, even though .gitignore:119 ignores security-audit/. A tracked-but-ignored artifact is
@@ -1190,12 +1199,15 @@ exclusion_rationale: GIT TRACKING - NOT gitignore status - governs Semgrep's tar
   the pinned rule packs were scanned and four results were raised against the audit's own tooling
   (2 in rules/secrets.yaml, 2 in rules/security-audit.yaml). Those were matches against the packs'
   own illustrative pattern text - artifacts of the tooling, not properties of the codebase under
-  audit. Excluding the five roots at capture removes them at source, which is strictly preferable
+  audit. Excluding that ONE root at capture removes them at source, which is strictly preferable
   to a downstream suppression: the plan authorises exactly two Layer 2 suppression rules (test-file
   auth-guard stubs and build-directory shell execution) and inventing a third is not permitted.
-  The four process-artifact roots are excluded on the plan's own authority - it places blitzy/,
-  blitzy-docs/, specs/ and agents/ outside the audited component surface - which also makes Layer 2
-  consistent with Layer 3a, whose four inventories already contain zero rows from those roots.
+  The four process-artifact roots are NOT excluded. The plan does place blitzy/, blitzy-docs/,
+  specs/ and agents/ outside the audited component surface, so excluding them was considered and
+  measured - they contribute 177 targets and ZERO results - which means exclusion would change the
+  target census and nothing else: no finding, no severity count, no rule. Their yielding no result
+  is itself the useful negative, and it is independently consistent with Layer 3a, whose four
+  inventories likewise contain zero rows from those roots.
 exclusion_scope: ONE root, security-audit, and no other. The exclusion exists to stop the scanner
   analysing its own configuration, which is the whole of the defect; it is deliberately not widened
   beyond that, because the operative exclusion set for this assessment is the profile's exclude_dirs
@@ -1424,6 +1436,51 @@ results-semgrep.json: 1372596 bytes, Semgrep native JSON (enrichment source only
   sha256 ab81e9ec97ab68eecdf704642bcf29b66437714a61904335fe88271c68b36ec2
   463 results, 9464 paths.scanned, 50 errors (all level 'warn'). NOT post-processed - see below for why none was
   needed, which is a measured finding rather than an omission.
+native_json_independent_revalidation: RE-EXECUTED AND RE-DERIVED at HEAD 80d1aabe57cc1a680f318937a7596d949ebcfab0,
+  after the artifact had already been committed, so the claims below are an independent confirmation of the layer
+  rather than a restatement of the capture that produced it. Preconditions asserted immediately before the run:
+  git status --porcelain = 0, git ls-files --others --exclude-standard = 0, DO_NOT_TRACK=1, SEMGREP_* count = 0.
+  The re-run wrote BOTH outputs to a scratch directory held OUTSIDE the repository, so the checkout was never
+  written and the determinism_precondition below was not itself violated by the act of verifying it.
+  RE-RUN, every figure reproducing the recorded capture: exit 0 | findings 463 | rules run 192 | targets scanned
+  9464 | parsed lines ~99.9% | skips 13 (--exclude) / 36 (>1.0 MB) / 402 (.semgrepignore) | wall clock 103 s
+  against the recorded 104 s, which is timing variance and is deliberately absent from the artifact.
+  SEMANTIC EQUIVALENCE, measured key by key: results (463) deep-equal as FULL objects and in order; errors (50)
+  deep-equal; paths.scanned (9464) an identical list including order; version, engine_requested, skipped_rules
+  and profiling_results all deep-equal. EXCLUDING the native "time" block the two documents are EXACTLY EQUAL -
+  1360339 serialized bytes identical on both runs. The drift is confined to five time sub-keys and to nothing
+  else: fixpoint_timeouts, max_memory_bytes, profiling_times, rules_parse_time, scanning_time. The seven
+  remaining sub-keys - matching_time, parsing_time, prefiltering, rules, tainting_time, targets, total_bytes -
+  are stable. This reproduces the disclosed deviation exactly: structurally reproducible, not byte-reproducible.
+  SARIF RE-DERIVED BYTE-IDENTICALLY FROM THE SAME RE-RUN, which is the stronger result because it validates the
+  post-processing pipeline as well as the scan: raw capture 1796630 bytes (exactly the recorded pre-transform
+  size), then T1 removed 463 uriBaseId entries and T2 redacted 5 secrets-pack snippets, yielding 1785873 bytes
+  and sha256 67e2663510e09b3f4085d344bd80314fc9fd35e9086c59ecb2e63a6a4c1202ff - the committed SARIF, bit for bit.
+  The transform script was ephemeral and held outside the repository, so the audit still publishes no tooling.
+  ASSERTION SUITE: 39 assertions over the committed bytes, all PASS, exit 0 - parse, top-level shape, the
+  security-audit.rules. prefix on 463/463 check_ids, CWE array 463/463, OWASP array 463/463, confidence+impact+
+  likelihood 463/463, missing-user on both images carrying CWE-250, the OSS sentinel on fingerprint and
+  extra.lines, path relativity, zero results under security-audit/, ANSI-freedom in RAW bytes AND in
+  JSON-escaped (\u001b) form AND in every decoded string value, the ledger and provenance fields, the SARIF
+  driver join at 463/463, the A7 census, cross-artifact finding identity, and the secret sweeps. The same suite
+  run against the fresh re-run capture also returns 39/39, so the assertions hold across runs and not merely
+  against one set of bytes.
+  ADVERSARIAL VALIDATION of that suite, because a suite that only ever agrees with the artifact proves nothing:
+  14 negative controls were applied to copies held outside the repository - dropped errors key, an
+  absolute-config-path-derived rule id, an absolute host path in a result, an injected Stripe-shaped secret, a
+  JSON-encoded ANSI escape, a malformed CWE, a non-sentinel fingerprint, a credential assignment leaked into
+  extra.lines, the missing-user corroboration removed, paths.scanned drift, a parse notice promoted to fatal, a
+  self-referential result, a truncated document and a missing document. ALL 14 were DETECTED, every failure
+  carried a stated reason, and ZERO produced an empty-reason failure. Three genuine gaps in the suite were found
+  and fixed by those controls rather than being discovered later: the host-path assertion missed a leaked segment
+  at the START of a rule id, the ANSI assertion missed the JSON-escaped \u001b form that carries no 0x1b byte on
+  disk yet still emits ANSI once decoded, and the credential-assignment sweep missed PREFIXED identifiers such as
+  CRON_API_KEY because "_" is a word character so a leading \b never matches inside it.
+  CRON_API_KEY LENGTH FORENSIC, recorded because a re-runner measuring naively will get a different number and
+  should not conclude the record is wrong: the assignment token after '=' in .env.example:82 is 34 characters
+  because the template QUOTES the value; the unquoted inner value is exactly 32 characters, lowercase
+  alphanumeric, within the base64url alphabet. The recorded class "base64-like API key" and length 32 refer to
+  the inner value. The value itself remains withheld here and is absent from both Layer 2 artifacts.
 sarif_post_processing: TWO deterministic transforms, applied in a single pass over the emitted document by an
   ephemeral script held OUTSIDE the repository, so the audit publishes no tooling of its own. Both transforms are
   specified below in enough detail to reproduce them byte-for-byte from the raw capture. Recorded in full because an undocumented post-process is exactly the
@@ -2558,5 +2615,286 @@ writer_scope: every artifact republished by the remediation pass - results-semgr
 writer_scratch_fixtures_location: ephemeral, OUTSIDE the repository; the two in-tree
   fixture paths used during the negative controls were removed and the working tree was
   re-verified at zero modified paths.
+
+# =============================================================================
+# LAYER 4 (Directive 7) - THE NORMALIZED ARTIFACT, AND EVERY DECISION IT ENCODES
+# =============================================================================
+# Recorded by the Layer 4 NORMALIZATION pass, which produced
+# security-audit/findings-layer-4-osv.json from the raw document above. Appended
+# as a new section per this file's additive convention; no existing line is
+# altered. The raw artifact remains UNMODIFIED (practice E4), so every
+# transformation named here lives in the normalized artifact alone.
+# This section exists because the eleven OBLIGATIONS stated earlier say what the
+# normalizer MUST do; what follows is what it DID, with the measurement for each.
+
+normalized_artifact: security-audit/findings-layer-4-osv.json
+normalized_artifact_bytes: 239857
+normalized_artifact_sha256: b072edfb18f1bebf837fd0d6b14dc860219b272b149adc6b9966ea8baeea7ce8
+normalized_artifact_records: 253
+normalized_artifact_physical_lines: 1
+# 'wc -l' reports 0 on this file and that is CORRECT, not a defect: the artifact is
+# ONE line with no terminating newline, so it contains zero newline BYTES, which is
+# what wc counts. 'grep -c ""' and 'awk "END{print NR}"' both report 1. This matches
+# byte for byte the convention of every single-line JSON artifact already published
+# here - layer-status.json, results-semgrep.json and results-semgrep.sarif all end
+# without a newline - so the artifact set stays internally consistent.
+normalized_artifact_embedded_newlines: 0
+normalized_artifact_ansi_escape_bytes: 0
+normalized_artifact_carriage_returns: 0
+normalized_artifact_tabs: 0
+normalized_artifact_encoding: UTF-8, ensure_ascii=False (6 advisory titles carry
+  non-ASCII characters and are emitted raw, as the single-line-minified contract requires)
+normalized_artifact_separators: (",", ":") - compact, no whitespace padding
+
+# ---- OBLIGATION 1 discharged: path relativization, applied unconditionally ----
+# The normalizer does NOT trust the raw document to be relative. It tests
+# os.path.isabs on results[].source.path and relativizes against the repository
+# root whenever the test fires, then strips any leading separator and './' prefix.
+# On this run the test fired 0 times because the Layer 4 pass had already
+# canonicalized that one field, so the code path was exercised against a
+# pre-relativized input and is a fixed point on it - which is the intended
+# behaviour and the reason the guard is unconditional rather than conditional.
+normalizer_absolute_source_paths_encountered: 0
+normalized_file_field_value: yarn.lock (identical on all 253 records)
+normalized_file_field_absolute_paths: 0
+normalized_artifact_host_path_substrings: 0 occurrences of '/tmp/', '/home/' or '/Users/'
+# WHY THAT LAST COUNT IS NOT INHERITED FROM THE RAW DOCUMENT: the raw document
+# legitimately retains 53 '/tmp/' substrings inside vulnerabilities[].details -
+# upstream advisory PROSE. The normalizer derives descriptions from .summary and
+# NEVER from .details, so none of the 53 can reach the normalized artifact. That is
+# a property of the field choice, not of a filtering pass.
+
+# ---- OBLIGATION 4 discharged: the dedup key, and the ambiguity resolved --------
+# Directive 6's key is (package_name, CVE_ID). It is applied literally, with the
+# documented fallback the data forces: 30 of the 370 raw records carry NO CVE
+# alias, so for those the advisory id stands in as the identifier. Six advisories
+# carry TWO CVE aliases; the canonical lowest-sorting alias is used so that one
+# advisory is never split into two findings.
+normalized_dedup_key: (package_name, CVE_ID); CVE_ID = lowest-sorting CVE alias,
+  falling back to the advisory id for the 30 records that carry no CVE alias
+normalized_dedup_input_records: 370
+normalized_dedup_output_records: 253
+normalized_dedup_collapsed_sum: 370 (every raw record is accounted for by exactly one
+  finding; the per-finding dedup_collapsed field sums back to the input count)
+# THE AMBIGUITY IS RESOLVED BY MEASUREMENT RATHER THAN BY PREFERENCE. Obligation 4
+# reported two readings, 253 and 259, and RECOMMENDED (package_name, advisory_id).
+# Both readings were computed and their PARTITIONS COMPARED: the multiset of
+# advisory-id groupings under (package_name, CVE_ID) with the fallback above is
+# IDENTICAL to the multiset under (package_name, advisory_id). The two keys are
+# therefore not merely close in count - they induce the same partition on this
+# data. The directive's literal key and the recommended key agree, and both give
+# 253. The 259 figure is the EXPLODED reading, which splits each of the six
+# two-CVE advisories in half; it is not used, and 253 + 6 = 259 reconciles it.
+normalized_partition_equals_package_advisory_partition: YES (verified, not assumed)
+normalized_distinct_packages: 75
+normalized_distinct_advisories: 250
+normalized_records_without_cve_alias: 30
+normalized_multi_version_records: 75
+# 250 advisories over 253 records is not an error: three advisories legitimately
+# affect two DIFFERENT packages each (lodash and lodash-es share two, path-to-regexp
+# one), and those are distinct findings, not duplicates.
+
+# ---- OBLIGATION 2 discharged: severity, and the ONE coercion, declared ---------
+normalized_severity_source_group_max: 250
+normalized_severity_source_database_label: 2
+normalized_severity_source_unknown: 1
+normalized_severity_critical: 10
+normalized_severity_high: 102
+normalized_severity_medium: 116
+normalized_severity_low: 25
+normalized_severity_total: 253
+# THE ONE PLACE THE NORMALIZED CENSUS DIFFERS FROM THE RAW CENSUS ABOVE, stated
+# here so a reviewer never has to guess at drift. The raw census reports 24 low
+# plus 1 unknown; the normalized artifact reports 25 low. It is the SAME single
+# record - http @ 0.0.1-security, advisory MAL-2025-22760 - counted under two
+# different constraints, and both counts are correct for their own denominator:
+#   raw census        may say 'unknown', because run-metadata.txt has no closed
+#                     vocabulary and honesty is the only constraint.
+#   findings artifact may NOT say 'unknown'. Verification check 9 closes the
+#                     severity vocabulary at critical|high|medium|low, so a fifth
+#                     token is not emittable at all.
+# The record is therefore assigned the FLOOR of the closed vocabulary rather than a
+# band, and the coercion is declared THREE times on the record itself so that it is
+# reported and never quietly rounded:
+#   severity_source  "unknown"
+#   severity_basis   "UNDERIVABLE: no CVSS vector, no group maximum and no database
+#                    label. Severity set to the floor of the closed vocabulary and
+#                    NOT derived; impact is not bounded by this value"
+#   description      carries the clause "OSV supplies no CVSS score and no CWE;
+#                    severity floored, not derived"
+# Flooring rather than inflating is the honest direction: raising a scoreless record
+# to critical would INVENT a score, which practice E8 forbids more strongly than the
+# coercion the closed vocabulary compels. The finding's real weight is carried by its
+# content - a MALICIOUS-PACKAGE advisory against a DIRECT PRODUCTION dependency of
+# @calcom/api-proxy, recorded in the artifact's direct_dependency_in field as
+# apps/api/package.json - not by a number the database never supplied.
+normalized_severity_floor_coercions: 1 (MAL-2025-22760 / http@0.0.1-security)
+normalized_cvss_score_null_records: 3 (the 2 database-label records plus the 1 unknown)
+normalized_github_label_mapping: CRITICAL->critical HIGH->high MODERATE->medium
+  MEDIUM->medium LOW->low. Both step-2 records on this run are LOW, so MODERATE->medium
+  is implemented but UNEXERCISED - it must not be removed as dead code, because a
+  database refresh can move a record into step 2 at any time.
+
+# ---- OBLIGATION 3 discharged: CWE, most specific, never inferred ---------------
+normalized_cwe_resolved: 252
+normalized_cwe_unresolved: 1 (MAL-2025-22760 - cwe = "" with cwe_resolved = false)
+normalized_distinct_cwes_chosen: 79
+normalized_records_with_multiple_cwe_candidates: 64
+normalized_generic_parent_dropped: 46
+normalized_chosen_cwe_is_generic_because_no_specific_candidate_existed: 46
+normalized_resolved_by_upstream_ordering_alone: 16
+# THE SELECTION RULE, stated so the choice is auditable on every record:
+#   1. Candidates are taken in the ADVISORY'S OWN cwe_ids ORDER - GitHub lists its
+#      primary CWE first - unioned deterministically across collapsed records.
+#   2. A documented set of 25 Pillars and high-level Classes is dropped, but ONLY
+#      when a more specific candidate survives. A record whose advisory offers
+#      nothing but a Class keeps that Class rather than losing its classification;
+#      that is the 46 counted above, not a defect.
+#   3. Documented parent->child edges drop the parent (for example CWE-915 loses to
+#      CWE-1321, CWE-77 to CWE-78, CWE-400 to CWE-770/674/835/1333/776).
+#   4. Remaining ties fall to the advisory's own first surviving id - the upstream
+#      database's primary - and NOT to an invented rule such as lowest number.
+#   Every candidate is preserved in the additive cwe_all field, so the selection is
+#   reversible and nothing the advisory said is lost.
+# HONEST DELTA AGAINST THE PLAN, disclosed rather than smoothed: the plan expected
+# CWE resolved on 251 of 253 and therefore two unresolved records. The measured
+# value is 252 of 253 with exactly ONE unresolved record, which is what the raw
+# census in this file independently records. Exactly one vulnerability in the whole
+# document lacks database_specific.cwe_ids, and no cwe_ids list anywhere is empty.
+# The measured figure is reported AS MEASURED; a second unresolved record was NOT
+# manufactured to match the plan, and no CWE was inferred for the one that is
+# genuinely absent.
+
+# ---- OBLIGATION 6 discharged: the override caveat, on EVERY finding ------------
+normalized_override_caveat_coverage: 253 of 253 findings (100%)
+normalized_resolution_override_true: 61 findings across 12 distinct packages
+normalized_resolution_override_raw_records_covered: 66 (reconciles exactly with the
+  raw census figure above; 61 is the deduplicated count and 66 the raw count)
+# The caveat is not a blanket warning. It is computed per package and takes one of
+# FOUR mutually exclusive forms, each stating a DIFFERENT fact:
+#   no override      no root resolutions entry targets the package, so the flagged
+#                    lockfile version stands as recorded              192 findings
+#   pin is SCOPED    the resolution key has the form <parent>/<target>, so it
+#                    governs ONE dependency path and cannot be assumed to cover a
+#                    flagged entry reached through any other parent    6 findings
+#   pin misses       the pinned target is NOT among the flagged lockfile versions,
+#                    so the installed version may differ from the matched one
+#                                                                     0 findings
+#   pin materialized the pinned target IS a flagged lockfile version, so the
+#                    override does not weaken the match              55 findings
+# All four forms close with the semantics the plan requires on every finding: an
+# OSV lockfile match is evidence of a POSSIBLE exposure, not proof of a live one.
+normalized_override_form_scoped: 6
+normalized_override_form_materialized: 55
+normalized_override_form_missed: 0
+normalized_override_form_absent: 192
+# THE SCOPING DISTINCTION IS LOAD-BEARING AND WAS A REAL DEFECT BEFORE IT WAS FIXED,
+# recorded here because the failure mode is subtle and cost a validation cycle to
+# catch. An earlier revision of the normalizer classified an override as "already
+# materialized" whenever the pinned version appeared ANYWHERE in the lockfile. For
+# fast-xml-parser that produced the wrong verdict on five of six findings: because
+# 5.3.5 IS in the lockfile, those five were reported as covered by the pin. They are
+# not. The key is "@lingo.dev/_compiler/fast-xml-parser": "5.3.5", which governs the
+# @lingo.dev/_compiler parent ALONE and does not reach the @boxyhq/saml-jackson ->
+# @aws-sdk/core transitive that pulls 4.4.1 - and BOTH versions remain in the
+# lockfile. A scoped pin is therefore classified as NOT covering the match
+# regardless of which versions happen to be present, because the presence of the
+# pinned version says nothing about the path the flagged entry was reached by.
+# Treating a scoped pin as covering would UNDERSTATE the exposure, which is exactly
+# the error this case exists to prevent. All six fast-xml-parser findings now invert:
+# the override does not weaken them, it fails to cover them.
+
+# ---- OBLIGATION 7 discharged: the suppression-boundary finding survives --------
+# All SIX fast-xml-parser advisories are present in the normalized artifact as
+# separate findings, with their real CWEs and band-derived severities:
+normalized_fast_xml_parser_findings: 6
+#   GHSA-8gc5-j5rx-235r  CVE-2026-33036  CWE-776   7.5  high      4.4.1, 5.3.5
+#   GHSA-fj3w-jwp8-x2g3  CVE-2026-27942  CWE-120   2.7  low       4.4.1, 5.3.5
+#   GHSA-gh4j-gqv2-49f6  CVE-2026-41650  CWE-91    6.1  medium    4.4.1, 5.3.5
+#   GHSA-jmr7-xgp7-cmfj  CVE-2026-26278  CWE-776   7.5  high      4.4.1, 5.3.5
+#   GHSA-jp2q-39xq-3w4g  CVE-2026-33349  CWE-1284  5.9  medium    4.4.1, 5.3.5
+#   GHSA-m7jm-9gc2-mpf2  CVE-2026-25896  CWE-185   9.3  critical  4.4.1 ONLY
+# The last row is the finding the repository's own gate cannot see: the .yarnrc.yml
+# suppression binds only the Yarn auditor, which is the very tool
+# .github/workflows/security-audit.yml:L19 gates on. REPORTED, NOT REPAIRED - the
+# lockfile, the manifests and the suppression are read and left exactly as found.
+
+# ---- OBLIGATION 10 restated where the merge implementer will meet it -----------
+# Every one of the 253 findings carries file = "yarn.lock" and line = 0, because
+# there is exactly one lockfile and Directive 7 mandates line 0 for dependency
+# findings. A merge key of file+line+CWE therefore collapses this layer purely by
+# CWE: 253 findings would fall to at most 79, the number of distinct CWEs chosen.
+# THE MERGE MUST DEDUPLICATE INTER-LAYER ONLY. Two findings from the same layer must
+# never merge. Each finding carries an explicit dedup_key so intra-layer identity is
+# already settled here and needs no re-derivation downstream.
+
+# ---- PHASE 9 boundary: what this artifact deliberately does NOT carry ----------
+normalized_gateblocking_fields: 0 - the field is absent from every record by design.
+  gateBlocking belongs exclusively to Layer 3b, and Layer 4 severity never produces a
+  gate BLOCK. This layer contributes findings and its OK/ERROR status, nothing more.
+normalized_reachability_value: "undetermined" on all 253 records
+# That value is a statement of method, not a shrug: this is a lockfile match with NO
+# call-graph or reachability analysis performed, so any other value would overclaim.
+# The one reachability-adjacent fact that CAN be stated is stated - the additive
+# direct_dependency_in field names which of the four AUDITED manifests declare the
+# package directly (package.json, apps/web/package.json, apps/api/v2/package.json,
+# apps/api/package.json). It is populated on 98 of 253 findings. Its bound is part of
+# its meaning: an empty list means "not declared in those four manifests", NEVER
+# "transitive everywhere", because the repository has 119 workspace manifests and the
+# other 115 were not consulted for this field.
+
+# ---- FIELD CONTRACT of the normalized artifact --------------------------------
+normalized_base_fields: file, line, severity, cwe, description, layer, tool
+  - exactly the mandated schema, in the mandated order, on every record
+normalized_additive_fields: package, ecosystem, versions, advisory, aliases, cve,
+  dedup_key, dedup_collapsed, cvss_score, severity_source, severity_basis, cwe_all,
+  cwe_resolved, reachability, direct_dependency_in, resolution_override,
+  override_caveat
+# Additive fields are sanctioned by ambiguity resolution A10 - the requirements
+# themselves introduce corroborated_by and gateBlocking beyond the base schema. Every
+# additive field here discharges a stated obligation; none is decorative.
+normalized_key_order_uniform: YES - all 253 records carry the same 24 keys in the
+  same order, so the artifact is diffable field by field
+normalized_line_field: integer 0 on all 253 records (never the string "0")
+normalized_layer_field: integer 4 on all 253 records
+normalized_tool_field: "osv-scanner" on all 253 records
+normalized_description_min_chars: 47
+normalized_description_median_chars: 95
+normalized_description_max_chars: 194
+normalized_description_empty: 0
+normalized_description_over_200: 0
+normalized_description_bare_identifier: 0 - no description is merely a CVE, GHSA or
+  MAL identifier; each states the vulnerability and names the affected package@version.
+  Truncation, when it is needed, shortens the TITLE and never the package@version tail,
+  because the field-derivation rule requires that tail. It was needed 0 times here.
+
+# ---- REPRODUCIBILITY of the normalization step ---------------------------------
+# Layer 4 is a deterministic layer, so the normalization must be reproducible too,
+# not merely the scan. Demonstrated rather than asserted: the normalizer was run
+# three times against the same raw artifact and produced the same sha256 on every
+# run - 5b14fa4d92edd5e98e2b8abd173878d3b9129af636bd7d60d43a12aea143cac5.
+normalized_determinism_runs: 3
+normalized_determinism_identical_digests: 3 of 3
+normalized_sort_key: (severity rank critical<high<medium<low, package name, CVE id
+  with the alias-free records ordered last, advisory id) - a total order, so no two
+  records can tie and filesystem or dict iteration order cannot leak into the output
+normalized_severity_bands: none 0.0 | low 0.1-3.9 | medium 4.0-6.9 | high 7.0-8.9 |
+  critical 9.0-10.0 - the published CVSS bands, not a locally chosen cut-off. A 0.0
+  score would map to the vocabulary floor 'low'; no record on this run scores 0.0.
+
+# ---- READ-ONLY GUARANTEE for the normalization pass ----------------------------
+normalized_pass_files_written: security-audit/findings-layer-4-osv.json (new) and this
+  additive section of security-audit/run-metadata.txt
+normalized_pass_files_read_only: security-audit/results-osv.json, yarn.lock,
+  package.json, .yarnrc.yml, apps/api/v2/package.json, apps/web/package.json,
+  apps/api/package.json, .github/workflows/security-audit.yml, SECURITY.md
+normalized_pass_application_sources_modified: 0
+normalized_pass_manifests_modified: 0
+normalized_pass_lockfiles_modified: 0
+normalized_pass_workflows_modified: 0
+normalized_pass_dependencies_installed: 0
+normalized_pass_live_targets_contacted: 0 - no network egress at all; the layer reads
+  the already-captured raw document, honouring SECURITY.md:L31-32
+normalized_pass_secret_values_written: 0
 
 # ============================================ end of run-metadata.txt ========
