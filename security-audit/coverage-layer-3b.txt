@@ -1,19 +1,19 @@
-[Sink Category 1/19: Open Redirect] — 200/441, 2 findings, 198 safe [coverage-only: 0, vulnerabilities: 2]
-[Sink Category 2/19: SSRF] — 200/274, 3 findings, 197 safe [coverage-only: 0, vulnerabilities: 3]
-[Sink Category 3/19: Log Injection] — 200/1739, 4 findings, 196 safe [coverage-only: 0, vulnerabilities: 4]
-[Sink Category 4/19: Auth Decision on User Input] — 134/134, 6 findings, 128 safe [coverage-only: 0, vulnerabilities: 6]
-[Sink Category 5/19: Weak PRNG] — 56/56, 1 findings, 55 safe [coverage-only: 0, vulnerabilities: 1]
-[Sink Category 6/19: Type Confusion] — 138/138, 3 findings, 135 safe [coverage-only: 0, vulnerabilities: 3]
-[Sink Category 7/19: Missing Authorization] — 200/1669, 0 findings, 200 safe [coverage-only: 1, vulnerabilities: 0]
-[Sink Category 8/19: XSS / DOM Manipulation] — 200/310, 0 findings, 200 safe [coverage-only: 1, vulnerabilities: 0]
-[Sink Category 9/19: Format String Injection] — 38/38, 0 findings, 38 safe [coverage-only: 1, vulnerabilities: 0]
-[Sink Category 10/19: Property Injection] — 15/15, 0 findings, 15 safe [coverage-only: 1, vulnerabilities: 0]
-[Sink Category 11/19: File System Write] — 19/19, 1 findings, 18 safe [coverage-only: 0, vulnerabilities: 1]
-[Sink Category 12/19: Cookie Attributes] — 42/42, 1 findings, 41 safe [coverage-only: 0, vulnerabilities: 1]
-[Sink Category 13/19: IDOR / Tenant Isolation] — 200/1669, 1 findings, 199 safe [coverage-only: 0, vulnerabilities: 1]
-[Sink Category 14/19: Information Disclosure via Query] — 200/747, 1 findings, 199 safe [coverage-only: 1, vulnerabilities: 1]
-[Sink Category 15/19: TOCTOU Race Conditions] — 200/518, 1 findings, 199 safe [coverage-only: 0, vulnerabilities: 1]
-[Sink Category 16/19: OAuth Scope Validation] — 44/44, 1 findings, 43 safe [coverage-only: 0, vulnerabilities: 1]
-[Sink Category 17/19: Code Injection] — 71/71, 0 findings, 71 safe [coverage-only: 1, vulnerabilities: 0]
-[Sink Category 18/19: Insecure Deserialization] — 138/138, 0 findings, 138 safe [coverage-only: 2, vulnerabilities: 0]
-[Sink Category 19/19: XML External Entity Injection] — 2/2, 0 findings, 2 safe [coverage-only: 1, vulnerabilities: 0]
+[Sink Category 1/19: Open Redirect] — 200/441, 3 findings, 197 safe
+[Sink Category 2/19: SSRF] — 200/274, 3 findings, 197 safe
+[Sink Category 3/19: Log Injection] — 200/1739, 4 findings, 196 safe
+[Sink Category 4/19: Auth Decision on User Input] — 134/134, 6 findings, 128 safe
+[Sink Category 5/19: Weak PRNG] — 56/56, 1 findings, 55 safe
+[Sink Category 6/19: Type Confusion] — 138/138, 4 findings, 134 safe
+[Sink Category 7/19: Missing Authorization] — 200/1669, 1 findings, 199 safe
+[Sink Category 8/19: XSS / DOM Manipulation] — 200/310, 1 findings, 199 safe
+[Sink Category 9/19: Format String Injection] — 38/38, 1 findings, 37 safe
+[Sink Category 10/19: Property Injection] — 15/15, 1 findings, 14 safe
+[Sink Category 11/19: File System Write] — 19/19, 1 findings, 18 safe
+[Sink Category 12/19: Cookie Attributes] — 42/42, 1 findings, 41 safe
+[Sink Category 13/19: IDOR / Tenant Isolation] — 200/1669, 3 findings, 197 safe
+[Sink Category 14/19: Information Disclosure via Query] — 200/747, 4 findings, 196 safe
+[Sink Category 15/19: TOCTOU Race Conditions] — 200/518, 1 findings, 199 safe
+[Sink Category 16/19: OAuth Scope Validation] — 44/44, 1 findings, 43 safe
+[Sink Category 17/19: Code Injection] — 71/71, 1 findings, 70 safe
+[Sink Category 18/19: Insecure Deserialization] — 138/138, 2 findings, 136 safe
+[Sink Category 19/19: XML External Entity Injection] — 2/2, 1 findings, 1 safe

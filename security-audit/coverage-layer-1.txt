@@ -1,10 +1,10 @@
 [Category 1/10: Cryptographic & Key Management] — 14 files examined, 4 findings found
-[Category 2/10: Authentication & Session] — 11 files examined, 14 findings found
+[Category 2/10: Authentication & Session] — 12 files examined, 16 findings found
 [Category 3/10: Transport & Origin] — 8 files examined, 6 findings found
-[Category 4/10: Request Handling] — 17 files examined, 13 findings found
+[Category 4/10: Request Handling] — 18 files examined, 14 findings found
 [Category 5/10: Container & CI/CD] — 35 files examined, 11 findings found
-[Category 6/10: Incoming Webhook & Integration Verification] — 29 files examined, 12 findings found
-[Category 7/10: Business-Domain Input Validation] — 8 files examined, 6 findings found
+[Category 6/10: Incoming Webhook & Integration Verification] — 29 files examined, 13 findings found
+[Category 7/10: Business-Domain Input Validation] — 11 files examined, 9 findings found
 [Category 8/10: Embed & Cross-Origin Security] — 17 files examined, 9 findings found
-[Category 9/10: API Version Security Parity] — 20 files examined, 6 findings found
+[Category 9/10: API Version Security Parity] — 43 files examined, 30 findings found
 [Category 10/10: Framework-Specific Misconfigurations] — 22 files examined, 14 findings found

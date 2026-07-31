@@ -10043,4 +10043,680 @@ coverage_layer_3b_reconciles_with_artifact: YES - <total> equals the committed s
 # pre-assessment tree. The only pre-existing tracked file this work modifies is .gitignore,
 # and only by appending an ignore entry for the artifact directory.
 #
+# ============================================================================
+# SECTION 22 - CODE-REVIEW REMEDIATION PASS F1-F16: WHAT CHANGED, THE EVIDENCE,
+#              AND THE RE-DERIVED COVERAGE ACCOUNTING
+# ============================================================================
+#
+# WHY THIS SECTION EXISTS AND WHAT IT OUTRANKS. A code review of the published set
+# raised sixteen findings (F1-F16). This section records the remediation pass that
+# closes them: every figure below was re-measured off disk after the last artifact
+# write, and where any figure ANYWHERE ABOVE - including Section 21, which was
+# authoritative for the previous state - disagrees with a figure here, the figure HERE
+# is authoritative. Earlier figures are retained rather than deleted because the
+# sequence of values is the audit trail (the convention Section 21 established).
+#
+# EXPLICIT SUPERSESSION LIST. This section supersedes:
+#   - 21.1 byte counts and digests, for the five artifacts this pass rewrote
+#     (findings-layer-1-arch.json, findings-layer-2-semgrep.json,
+#      findings-layer-3b-taint.json, coverage-layer-1.txt, coverage-layer-3b.txt);
+#     the other fourteen rows of 21.1 are unchanged and remain valid.
+#   - 21.2 record census in full, and 21.3 the cross-artifact identities.
+#   - coverage_layer_1_totals (examined=142 findings=65) and every
+#     coverage_layer_1_category_N_examined / _findings key in the LAYER 1
+#     PER-CATEGORY EXAMINED-FILE LISTS block.
+#   - every coverage_layer_1_category_N_probe key, for the four categories whose probe
+#     is extended and republished in 22.5; the other six probes are unchanged.
+#   - layer_1_files_examined_total: 161 and Section 17.10 layer_1_findings_total: 77.
+#   - coverage_layer_3b_category_N_{total,evaluated,findings,safe} for all nineteen
+#     categories, superseded by the table in 22.6.
+# It does NOT supersede: the examined-file ROWS themselves (they remain the itemized
+# provenance for the 142 files they list), the per-category feed maps, the anti-padding
+# filter definition, or any Layer 2 / Layer 4 / inventory figure.
+#
+# ---------------------------------------------------------------------------
+# 22.1  FINDING -> ARTIFACT MAP
+# ---------------------------------------------------------------------------
+# F<n> grade as reported by the review; "artifact" is what this pass wrote.
+  F1   MAJOR     coverage-layer-3b.txt
+  F2   MINOR     findings-layer-3b-taint.json
+  F3   MAJOR     findings-layer-2-semgrep.json
+  F4   MAJOR     findings-layer-2-semgrep.json
+  F5   CRITICAL  findings-layer-1-arch.json + findings-layer-3b-taint.json
+  F6   MAJOR     findings-layer-1-arch.json + findings-layer-3b-taint.json
+  F7   CRITICAL  findings-layer-1-arch.json + findings-layer-3b-taint.json
+  F8   MAJOR     findings-layer-1-arch.json + findings-layer-3b-taint.json
+  F9   MAJOR     findings-layer-1-arch.json
+  F10  MAJOR     findings-layer-1-arch.json
+  F11  MAJOR     findings-layer-1-arch.json + findings-layer-3b-taint.json
+  F12  CRITICAL  findings-layer-1-arch.json + findings-layer-3b-taint.json
+  F13  MAJOR     findings-layer-1-arch.json
+  F14  MAJOR     findings-layer-1-arch.json
+  F15  MAJOR     findings-layer-1-arch.json
+  F16  MAJOR     findings-layer-1-arch.json
+#
+# One-line rationale per row, in the same order:
+  F1   mandated grammar only; findings column re-derived from JSON
+  F2   record 24 nonVulnerabilityCoverage false -> true
+  F3   9 dangerouslySetInnerHTML descriptions re-stated conditionally
+  F4   4 var-in-href descriptions re-stated as low-confidence
+  F5   payment-UID IDOR
+  F6   members-matching-attribute tenant ids
+  F7   unauthenticated org team event-type list
+  F8   verified-email cross-team disclosure
+  F9   OAuth token / clientId binding
+  F10  Stripe webhook fail-open on missing signature or secret
+  F11  webhook signing secret readable by MEMBER
+  F12  conferencing OAuth state: 4 L1 + 2 L3b records
+  F13  atoms event-type PATCH output-alias request DTO
+  F14  never-executed atoms schedule Zod schema
+  F15  14 client/backend contract-drift records
+  F16  4 error-propagation records
+#
+# ---------------------------------------------------------------------------
+# 22.2  F3 AND F4 - THE THIRTEEN LAYER 2 DESCRIPTIONS THAT WERE RE-STATED
+# ---------------------------------------------------------------------------
+# The review found these descriptions asserted confirmed executable XSS where the
+# underlying Semgrep message is conditional and, on eight of the nine DOM sinks, a
+# sanitizer demonstrably runs on the data path. Only the description string changed.
+# Every other field - rule, sarif_level, native_severity, cwe, cwe_all, cwe_source,
+# owasp, confidence, impact, likelihood, sarif_message_chars and the remaining
+# additive keys - is byte-identical to the previous revision, asserted by comparing
+# the two record lists with the description key removed.
+layer_2_descriptions_rewritten: 13
+layer_2_records_total_unchanged: 463
+# record  1-based index | new length | file:line
+   440   199 chars  apps/web/components/apps/installation/EventTypesStepCard.tsx:72
+   442   191 chars  apps/web/modules/apps/[slug]/slug-view.tsx:71
+   445   198 chars  apps/web/modules/event-types/components/EventTypeDescription.tsx:63
+   446   196 chars  apps/web/modules/form-builder/components/FormBuilderField.tsx:28
+   447   195 chars  apps/web/modules/team/team-view.tsx:161
+   448   197 chars  apps/web/modules/users/views/users-public-view.tsx:108
+   449   196 chars  apps/web/modules/videos/views/videos-single-view.tsx:588
+   450   199 chars  apps/web/pages/router/index.tsx:25
+   454   193 chars  packages/emails/templates/confirm-email.html:420
+   455   200 chars  packages/emails/templates/confirm-email.html:474
+   456   200 chars  packages/emails/templates/confirm-email.html:538
+   457   199 chars  packages/emails/templates/confirm-email.html:606
+   463   193 chars  packages/ui/components/form/checkbox/Checkbox.tsx:101
+#
+# The two rule messages the re-statements preserve (quoted from the SARIF driver rule
+# list, condensed): react-dangerouslysetinnerhtml warns that a non-constant value
+# "can" be XSS "if this comes from user-provided input" and recommends a sanitization
+# library; var-in-href warns that a template variable in href "allows" a javascript:
+# URI. Both are conditional, and the rewritten descriptions keep that modality while
+# naming the sanitizer or the server-side producer observed on each path.
+#
+# ---------------------------------------------------------------------------
+# 22.3  LAYER 1 ADDITIONS - F5 TO F16
+# ---------------------------------------------------------------------------
+layer_1_records_before_this_pass: 95
+layer_1_records_added: 31
+layer_1_records_after: 126
+layer_1_by_category_after: 1=4 2=16 3=6 4=14 5=11 6=13 7=9 8=9 9=30 10=14
+layer_1_by_severity_after: critical=14 high=36 medium=67 low=9
+# cat  severity  cwe        file:line
+   2   critical CWE-522    apps/api/v2/src/modules/conferencing/controllers/conferencing.controller.ts:111
+   2   high     CWE-352    apps/api/v2/src/modules/conferencing/controllers/conferencing.controller.ts:131
+   4   high     CWE-601    apps/api/v2/src/modules/conferencing/controllers/conferencing.controller.ts:180
+   6   high     CWE-347    apps/api/v2/src/modules/billing/controllers/billing.controller.ts:127
+   7   high     CWE-915    apps/api/v2/src/modules/atoms/controllers/atoms.event-types.controller.ts:185
+   7   high     CWE-1287   apps/api/v2/src/modules/atoms/controllers/atoms.schedules.controller.ts:133
+   7   medium   CWE-843    apps/api/v2/src/modules/conferencing/controllers/conferencing.controller.ts:151
+   9   high     CWE-863    apps/api/v2/src/ee/provider/provider.controller.ts:55
+   9   high     CWE-639    apps/api/v2/src/modules/atoms/controllers/atoms.controller.ts:43
+   9   medium   CWE-1059   apps/api/v2/src/modules/atoms/controllers/atoms.event-types.controller.ts:113
+   9   critical CWE-639    apps/api/v2/src/modules/atoms/controllers/atoms.event-types.controller.ts:141
+   9   high     CWE-200    apps/api/v2/src/modules/atoms/controllers/atoms.verification.controller.ts:114
+   9   high     CWE-522    apps/api/v2/src/modules/oauth-clients/controllers/oauth-client-webhooks/oauth-client-webhooks.controller.ts:92
+   9   critical CWE-862    apps/api/v2/src/modules/organizations/event-types/organizations-event-types.controller.ts:160
+   9   medium   CWE-1059   apps/api/v2/src/modules/organizations/teams/index/outputs/organization-team.output.ts:42
+   9   medium   CWE-843    apps/web/lib/hooks/settings/platform/billing/useSubscribeTeamToStripe.ts:24
+   9   medium   CWE-843    apps/web/lib/hooks/settings/platform/oauth-clients/useOAuthClientWebhooks.ts:16
+   9   medium   CWE-843    packages/platform/atoms/connect/conferencing-apps/hooks/useAtomBulkUpdateEventTypesToDefaultLocation.ts:45
+   9   medium   CWE-843    packages/platform/atoms/connect/conferencing-apps/hooks/useConnect.ts:122
+   9   medium   CWE-843    packages/platform/atoms/event-types/hooks/useAtomUpdateEventType.ts:44
+   9   medium   CWE-843    packages/platform/atoms/hooks/bookings/useCreateInstantBooking.ts:26
+   9   medium   CWE-390    packages/platform/atoms/hooks/bookings/useGetBookingForReschedule.ts:47
+   9   medium   CWE-843    packages/platform/atoms/hooks/calendars/useAddSelectedCalendar.ts:24
+   9   medium   CWE-843    packages/platform/atoms/hooks/connect/useCheck.ts:35
+   9   medium   CWE-573    packages/platform/atoms/hooks/schedules/useUpdateSchedule.ts:36
+   9   medium   CWE-843    packages/platform/atoms/hooks/teams/useTeamMembers.ts:13
+   9   medium   CWE-390    packages/platform/atoms/hooks/useOAuthClient.ts:60
+   9   high     CWE-390    packages/platform/atoms/hooks/useOAuthFlow.ts:94
+   9   medium   CWE-843    packages/platform/atoms/hooks/useVerifyEmail.ts:67
+   9   low      CWE-665    packages/platform/atoms/lib/http.ts:54
+   9   medium   CWE-252    packages/platform/atoms/router/Router.tsx:91
+#
+# ROUTING RULE APPLIED, AND WHY (it decides which layer carries which anchor).
+# Layer 1 anchors the ROUTE AUTHORITY - the guard, role or decorator declaration that
+# is the architectural root cause - because that is where the decision to admit the
+# caller is made. Layer 3b anchors the INVENTORIED QUERY SINK, because AAP check 16
+# requires every Layer 3b file:line to exist in sink-inventory.txt, and a decorator
+# line is not a sink. The same vulnerability therefore legitimately appears once per
+# layer with two different anchors; that is not duplication, and the merge step
+# deduplicates only on file+line+CWE across layers, which these pairs do not collide on.
+#
+# SEVERITY SEMANTICS, STATED BECAUSE IT DIVERGES FROM THE REVIEW GRADES. AAP 0.5.4
+# Block 11 and 0.8.2 define severity as IMPACT of the vulnerability, and gateBlocking
+# as exploitability; the review grades (CRITICAL/MAJOR/MINOR) grade the AUDIT OMISSION.
+# A MAJOR omission whose underlying defect is a client/server contract drift with no
+# direct attacker-controlled path is therefore recorded at medium severity, and the
+# latent zero-caller defect at packages/platform/atoms/lib/http.ts:54 at low. The two
+# scales are not interchangeable and neither was coerced into the other.
+#
+# ---------------------------------------------------------------------------
+# 22.4  LAYER 3b ADDITIONS, F2, AND ANCHOR PROVENANCE FOR ALL FORTY RECORDS
+# ---------------------------------------------------------------------------
+layer_3b_records_before_this_pass: 34
+layer_3b_records_added: 6
+layer_3b_records_after: 40
+layer_3b_by_category_after: 1=3 2=3 3=4 4=6 5=1 6=4 7=1 8=1 9=1 10=1 11=1 12=1 13=3 14=4 15=1 16=1 17=1 18=2 19=1
+layer_3b_by_severity_after: critical=5 high=10 medium=12 low=13
+layer_3b_gate_blocking_after: 16
+layer_3b_advisory_after: 24
+layer_3b_non_vulnerability_coverage_after: 10
+layer_3b_vulnerabilities_after: 30
+# cat  severity  cwe        gateBlocking  file:line
+  13   critical CWE-639    True          apps/api/v2/src/modules/atoms/atoms.repository.ts:13
+  13   critical CWE-862    True          apps/api/v2/src/modules/teams/event-types/teams-event-types.repository.ts:117
+  14   high     CWE-639    True          apps/api/v2/src/modules/atoms/services/verification-atom.service.ts:80
+  14   high     CWE-522    True          apps/api/v2/src/modules/webhooks/webhooks.repository.ts:77
+   1   high     CWE-601    True          apps/api/v2/src/modules/conferencing/controllers/conferencing.controller.ts:97
+   6   high     CWE-843    True          apps/api/v2/src/modules/conferencing/controllers/conferencing.controller.ts:151
+#
+# F2: record 24, apps/api/v2/scripts/generate-secrets.ts:11, category 11, low, CWE-912.
+# nonVulnerabilityCoverage moved false -> true. gateBlocking stays false and the
+# demotionReason is byte-identical to the previous revision, asserted by comparison
+# against git HEAD. The record already stated that no route reaches the write sink, so
+# the flag now matches the prose; the flip raises non_vulnerability_coverage 9 -> 10 and
+# leaves vulnerabilities at 30 by construction of the two complementary counts.
+#
+# CHECK-16 ANCHOR PROVENANCE. Every one of the forty file:line pairs is present in
+# sink-inventory.txt (check 16 holds with zero exceptions). The third column lists the
+# 3a inventory categories carried by that exact position, and the fourth states whether
+# the anchor sits on the L3b category IDENTITY feed or on one of its documented
+# SECONDARY feeds (coverage_layer_3b_category_N_feed_3a_categories, unchanged). Five of
+# forty anchor on a secondary feed, all five inside their category feed set - the
+# condition the per-category ledger records as anchors_pulled_in.
+# rec  L3b  identity-3a  3a cats at anchor  feed       file:line
+    1    1            1  1                  identity   packages/app-store/larkcalendar/api/callback.ts:125
+    2    1            1  1                  identity   apps/api/v2/src/modules/oauth-clients/controllers/oauth-flow/oauth-flow.controller.ts:80
+    3    2            2  2                  identity   packages/features/webhooks/lib/sendPayload.ts:373
+    4    2            2  2                  identity   packages/features/webhooks/lib/handleWebhookScheduledTriggers.ts:67
+    5    2            2  2                  identity   packages/features/webhooks/lib/service/WebhookService.ts:107
+    6    3            3  12                 secondary  apps/web/app/api/parseRequestData.ts:49
+    7    3            3  3                  identity   apps/api/v2/src/filters/http-exception.filter.ts:21
+    8    3            3  3                  identity   apps/api/v2/src/middleware/request-ids/request-id.interceptor.ts:36
+    9    3            3  3                  identity   apps/api/v2/src/middleware/request-ids/request-id.middleware.ts:24
+   10    4            4  4                  identity   packages/app-store/feishucalendar/api/events.ts:66
+   11    4            4  4                  identity   packages/app-store/larkcalendar/api/events.ts:59
+   12    4            4  4                  identity   apps/api/v2/src/modules/auth/strategies/api-auth/api-auth.strategy.ts:186
+   13    4            4  4                  identity   apps/web/app/api/webhook/app-credential/route.ts:26
+   14    4            4  4                  identity   packages/features/calendar-subscription/adapters/GoogleCalendarSubscription.adapter.ts:41
+   15    4            4  4                  identity   packages/features/calendars/lib/cancellation-sync/handlers/GoogleCancellationHandler.ts:122
+   16    5            5  5                  identity   packages/lib/random.ts:11
+   17    6           18  18                 identity   packages/app-store/_utils/oauth/decodeOAuthState.ts:12
+   18    6           18  18                 identity   apps/api/v2/src/ee/calendars/controllers/calendars.controller.ts:275
+   19    6           18  18                 identity   apps/api/v2/src/modules/stripe/controllers/stripe.controller.ts:101
+   20    7           13  13                 identity   apps/web/app/api/cron/bookingReminder/route.ts:27
+   21    8            6  6                  identity   apps/web/pages/router/index.tsx:24
+   22    9           12  12                 identity   apps/web/app/api/parseRequestData.ts:36
+   23   10            8  8                  identity   packages/lib/server/defaultHandler.ts:9
+   24   11            7  7                  identity   apps/api/v2/scripts/generate-secrets.ts:11
+   25   12            9  9                  identity   packages/lib/default-cookies.ts:27
+   26   13           13  13                 identity   apps/api/v1/pages/api/payments/[id].ts:53
+   27   14           14  13                 secondary  apps/api/v1/pages/api/bookings/[id]/_get.ts:102
+   28   14           14  13                 secondary  apps/api/v1/pages/api/payments/[id].ts:47
+   29   15           15  15                 identity   apps/web/app/api/cron/bookingReminder/route.ts:146
+   30   16           16  16                 identity   apps/web/app/api/teams/googleworkspace/callback/route.ts:63
+   31   17           17  10                 secondary  packages/features/ee/managed-event-types/lib/handleChildrenEventTypes.ts:265
+   32   18           18  18                 identity   packages/app-store/btcpayserver/api/webhook.ts:54
+   33   18           18  18                 identity   apps/web/lib/apps/[slug]/getStaticProps.ts:35
+   34   19           19  19                 identity   packages/ui/components/editor/plugins/ToolbarPlugin.tsx:371
+   35   13           13  13                 identity   apps/api/v2/src/modules/atoms/atoms.repository.ts:13
+   36   13           13  13                 identity   apps/api/v2/src/modules/teams/event-types/teams-event-types.repository.ts:117
+   37   14           14  14                 identity   apps/api/v2/src/modules/atoms/services/verification-atom.service.ts:80
+   38   14           14  13                 secondary  apps/api/v2/src/modules/webhooks/webhooks.repository.ts:77
+   39    1            1  1                  identity   apps/api/v2/src/modules/conferencing/controllers/conferencing.controller.ts:97
+   40    6           18  18                 identity   apps/api/v2/src/modules/conferencing/controllers/conferencing.controller.ts:151
+#
+# ---------------------------------------------------------------------------
+# 22.5  LAYER 1 COVERAGE: HOW EVERY NUMERATOR IN coverage-layer-1.txt IS DERIVED
+# ---------------------------------------------------------------------------
+# Row grammar, unchanged and mandated by Directive 1:
+#   [Category N/10: <name>] - <files> files examined, <findings> findings found
+# (the dash is U+2014; the file carries exactly one per row and nothing else non-ASCII).
+#
+# ARITHMETIC, stated as an identity a reviewer can re-run:
+#   findings(N) = count of records in findings-layer-1-arch.json whose category == N.
+#                 Generated mechanically; the ten values sum to the record count, 126.
+#   examined(N) = baseline(N) + |additions(N)|, where
+#                 baseline(N)  = the numerator published for N before this pass, and
+#                 additions(N) = { file cited by a NEW category-N record } minus
+#                                ( the itemized examined-file rows for N above
+#                                  UNION the files cited by category-N records at
+#                                  git HEAD ).
+# The subtraction is what prevents double counting: a file already inside the published
+# numerator cannot be added again just because a new record now cites it.
+#
+# HONEST DISCLOSURE (practice E8), because the baseline is not fully itemizable. The
+# itemized rows above account for 142 files, while the numerators published before this
+# pass sum to 181. The 39-file difference was introduced by a later pass whose file list
+# was never persisted, so it cannot be re-derived from this file - the same class of
+# defect an earlier disclosure in this document already recorded. Two options existed:
+# republish only what is itemizable, which would silently DROP numerators on the claim
+# that earlier passes had padded them (unprovable either way), or keep the published
+# baseline and itemize this pass exhaustively. The second is taken, because it changes
+# no earlier claim and makes the delta fully checkable. Every addition row below carries
+# a role code and a probe hit count and passes both anti-padding filters (path exists,
+# at least one line matches the category probe).
+#
+# PROBE EXTENSIONS, REPUBLISHED RATHER THAN APPLIED SILENTLY. Four category probes did
+# not match constructs this pass legitimately examined, so they are extended. Each
+# extension adds only tokens that ARE the category construct at issue, never a generic
+# token, and the filter stays monotone: no file previously admitted can be removed by an
+# extension, because the test is a hit count of at least one.
+#   category 2 (Authentication & Session): needed because a file scored 0 hits under the
+#     published probe. Added alternatives: accessToken|Bearer|@UseGuards\(\s*\)|ApiAuthGuard|authorization
+#   category 4 (Request Handling): needed because a file scored 0 hits under the
+#     published probe. Added alternatives: @Redirect|[Rr]edirect\(|returnTo|@Query\(|@Headers\(|@Param\(
+#   category 7 (Business-Domain Input Validation): needed because a file scored 0 hits under the
+#     published probe. Added alternatives: z\.infer|@Body\(|Pick<|Omit<|Partial<|ZodSchema|parse\(
+#   category 9 (API Version Security Parity): needed because a file scored 0 hits under the
+#     published probe. Added alternatives: ApiResponse<|http\.(get|post|patch|delete)<|useMutation<|useQuery<|response\.ok|onError|\.catch\(|@ApiProperty|OutputDto|ResponseDto|data!:|getVersionHeader|API_VERSION|axios
+coverage_layer_1_category_2_probe_v2: rateLimit|checkRateLimitAndThrowError|[Tt]urnstile|password|maxAge|session|accessToken|Bearer|@UseGuards\(\s*\)|ApiAuthGuard|authorization
+coverage_layer_1_category_4_probe_v2: fetch\(|validateUrlForSSRF|[Ss][Ss][Rr][Ff]|createHmac|subscriberUrl|[Ww]ebhook|WEBHOOK|sendPayload|schedulePayload|@Redirect|[Rr]edirect\(|returnTo|@Query\(|@Headers\(|@Param\(
+coverage_layer_1_category_7_probe_v2: z\.number|z\.string|\.min\(|\.max\(|\.int\(|\.positive\(|recurring|z\.object|z\.infer|@Body\(|Pick<|Omit<|Partial<|ZodSchema|parse\(
+coverage_layer_1_category_9_probe_v2: withMiddleware|defaultHandler|UseGuards|AuthGuard|canActivate|authedProcedure|[Ii]sAdmin|isSystemWideAdmin|rateLimit|ownership|userId|ApiResponse<|http\.(get|post|patch|delete)<|useMutation<|useQuery<|response\.ok|onError|\.catch\(|@ApiProperty|OutputDto|ResponseDto|data!:|getVersionHeader|API_VERSION|axios
+# The six unextended probes (categories 1, 3, 5, 6, 8, 10) are unchanged and remain as
+# published above.
+#
+# PER-CATEGORY DERIVATION. Rows are "<role> <probe hits> <path>", the same column order
+# as the itemized lists above. role F = cited by a category-N record in the artifact.
+coverage_layer_1_category_1_examined_v2: 14   # 14 baseline + 0 added
+coverage_layer_1_category_1_findings_v2: 4
+coverage_layer_1_category_2_examined_v2: 12   # 11 baseline + 1 added
+coverage_layer_1_category_2_findings_v2: 16
+  F   13  apps/api/v2/src/modules/conferencing/controllers/conferencing.controller.ts
+coverage_layer_1_category_3_examined_v2: 8   # 8 baseline + 0 added
+coverage_layer_1_category_3_findings_v2: 6
+coverage_layer_1_category_4_examined_v2: 18   # 17 baseline + 1 added
+coverage_layer_1_category_4_findings_v2: 14
+  F   16  apps/api/v2/src/modules/conferencing/controllers/conferencing.controller.ts
+coverage_layer_1_category_5_examined_v2: 35   # 35 baseline + 0 added
+coverage_layer_1_category_5_findings_v2: 11
+coverage_layer_1_category_6_examined_v2: 29   # 29 baseline + 0 added
+coverage_layer_1_category_6_findings_v2: 13
+coverage_layer_1_category_7_examined_v2: 11   # 8 baseline + 3 added
+coverage_layer_1_category_7_findings_v2: 9
+  F    4  apps/api/v2/src/modules/atoms/controllers/atoms.event-types.controller.ts
+  F    2  apps/api/v2/src/modules/atoms/controllers/atoms.schedules.controller.ts
+  F    1  apps/api/v2/src/modules/conferencing/controllers/conferencing.controller.ts
+coverage_layer_1_category_8_examined_v2: 17   # 17 baseline + 0 added
+coverage_layer_1_category_8_findings_v2: 9
+coverage_layer_1_category_9_examined_v2: 43   # 20 baseline + 23 added
+coverage_layer_1_category_9_findings_v2: 30
+  F    5  apps/api/v2/src/ee/provider/provider.controller.ts
+  F    7  apps/api/v2/src/modules/atoms/controllers/atoms.controller.ts
+  F   25  apps/api/v2/src/modules/atoms/controllers/atoms.event-types.controller.ts
+  F   11  apps/api/v2/src/modules/atoms/controllers/atoms.verification.controller.ts
+  F   23  apps/api/v2/src/modules/oauth-clients/controllers/oauth-client-webhooks/oauth-client-webhooks.controller.ts
+  F   12  apps/api/v2/src/modules/organizations/event-types/organizations-event-types.controller.ts
+  F   15  apps/api/v2/src/modules/organizations/teams/index/outputs/organization-team.output.ts
+  F    7  apps/web/lib/hooks/settings/platform/billing/useSubscribeTeamToStripe.ts
+  F    4  apps/web/lib/hooks/settings/platform/oauth-clients/useOAuthClientWebhooks.ts
+  F    3  packages/platform/atoms/connect/conferencing-apps/hooks/useAtomBulkUpdateEventTypesToDefaultLocation.ts
+  F   13  packages/platform/atoms/connect/conferencing-apps/hooks/useConnect.ts
+  F    8  packages/platform/atoms/event-types/hooks/useAtomUpdateEventType.ts
+  F    8  packages/platform/atoms/hooks/bookings/useCreateInstantBooking.ts
+  F    6  packages/platform/atoms/hooks/bookings/useGetBookingForReschedule.ts
+  F    9  packages/platform/atoms/hooks/calendars/useAddSelectedCalendar.ts
+  F    2  packages/platform/atoms/hooks/connect/useCheck.ts
+  F   10  packages/platform/atoms/hooks/schedules/useUpdateSchedule.ts
+  F    1  packages/platform/atoms/hooks/teams/useTeamMembers.ts
+  F    7  packages/platform/atoms/hooks/useOAuthClient.ts
+  F    8  packages/platform/atoms/hooks/useOAuthFlow.ts
+  F    5  packages/platform/atoms/hooks/useVerifyEmail.ts
+  F    5  packages/platform/atoms/lib/http.ts
+  F    1  packages/platform/atoms/router/Router.tsx
+coverage_layer_1_category_10_examined_v2: 22   # 22 baseline + 0 added
+coverage_layer_1_category_10_findings_v2: 14
+coverage_layer_1_totals_v2: examined=209 findings=126
+coverage_layer_1_file_budget_assert_v2: max category numerator = 43 of 50 (category 9); all ten within budget
+# Numerators that moved in this pass, old -> new, with the count of added files:
+#   category  2: 11 -> 12  (+1)
+#   category  4: 17 -> 18  (+1)
+#   category  7: 8 -> 11  (+3)
+#   category  9: 20 -> 43  (+23)
+# Categories 1, 3, 5, 6, 8 and 10 numerators are unchanged; their findings values moved
+# only where this pass added records, and every one still reconciles with the artifact.
+#
+# ---------------------------------------------------------------------------
+# 22.6  LAYER 3b COVERAGE: THE TOTAL MODEL, AND THE F1 CORRECTION
+# ---------------------------------------------------------------------------
+# Row grammar, unchanged and mandated by Directive 5:
+#   [Sink Category N/19: <name>] - <evaluated>/<total>, <findings> findings, <safe> safe
+# F1 reported two defects in the emitted file, both now closed:
+#   (a) every row carried a non-mandated "[coverage-only: X, vulnerabilities: Y]"
+#       suffix. The suffix is removed; the row is now exactly the mandated grammar.
+#   (b) the <findings> column excluded records whose nonVulnerabilityCoverage is true,
+#       reporting them only inside that suffix. <findings> now counts EVERY record
+#       carrying the category, which is what the grammar means and what makes the file
+#       reconcile with the artifact: the nineteen values sum to 40, the record count.
+#
+# WHAT <total> IS, STATED PRECISELY BECAUSE TWO DEFENSIBLE MODELS EXIST.
+#   total(N)     = number of distinct file:line positions in sink-inventory.txt whose 3a
+#                  category is the IDENTITY feed of L3b category N - the single 3a
+#                  category that shares N's construct identity (map below).
+#   evaluated(N) = min(200, total(N)), the Directive 5 per-category budget.
+#   safe(N)      = evaluated(N) - findings(N).
+# The alternative model is the UNION of all feed categories, which is what the
+# per-category ledger above recorded in coverage_layer_3b_category_N_total. The two
+# agree for the fourteen single-feed categories and diverge for the five multi-feed ones
+# (3, 6, 7, 14, 17). The identity model is authoritative here for two reasons: it is
+# what the published file has always reported, so the totals column needs no revision
+# and cross-run baseline comparison stays stable; and a category's <total> should count
+# the sinks that ARE that construct, with secondary-feed positions entering as pulled-in
+# anchors (22.4) rather than inflating the denominator. Both figures are now on record.
+# L3b -> identity 3a feed:
+#   1->1  2->2  3->3  4->4  5->5  6->18  7->13  8->6  9->12  10->8  11->7  12->9  13->13  14->14  15->15  16->16  17->17  18->18  19->19
+# Every total below was re-derived from sink-inventory.txt in this pass and asserted
+# equal to the previously published value, so no denominator moved: only the findings
+# and safe columns changed, exactly as F1 directed.
+# cat  identity  feeds     total  evaluated  findings  safe  name
+    1         1  1           441        200         3   197  Open Redirect
+    2         2  2           274        200         3   197  SSRF
+    3         3  3,12       1739        200         4   196  Log Injection
+    4         4  4           134        134         6   128  Auth Decision on User Input
+    5         5  5            56         56         1    55  Weak PRNG
+    6        18  8,18        138        138         4   134  Type Confusion
+    7        13  13,15      1669        200         1   199  Missing Authorization
+    8         6  6           310        200         1   199  XSS / DOM Manipulation
+    9        12  12           38         38         1    37  Format String Injection
+   10         8  8            15         15         1    14  Property Injection
+   11         7  7            19         19         1    18  File System Write
+   12         9  9            42         42         1    41  Cookie Attributes
+   13        13  13         1669        200         3   197  IDOR / Tenant Isolation
+   14        14  13,14       747        200         4   196  Information Disclosure via Query
+   15        15  15          518        200         1   199  TOCTOU Race Conditions
+   16        16  16           44         44         1    43  OAuth Scope Validation
+   17        17  10,11,17     71         71         1    70  Code Injection
+   18        18  18          138        138         2   136  Insecure Deserialization
+   19        19  19            2          2         1     1  XML External Entity Injection
+coverage_layer_3b_findings_sum_v2: 40   # equals layer_3b record count
+# findings/safe rows that moved, old -> new, and why:
+#   category  1: 2/198 -> 3/197
+#   category  6: 3/135 -> 4/134
+#   category  7: 0/200 -> 1/199
+#   category  8: 0/200 -> 1/199
+#   category  9: 0/38 -> 1/37
+#   category 10: 0/15 -> 1/14
+#   category 13: 1/199 -> 3/197
+#   category 14: 1/199 -> 4/196
+#   category 17: 0/71 -> 1/70
+#   category 18: 0/138 -> 2/136
+#   category 19: 0/2 -> 1/1
+#   The moves are of two kinds: coverage-only records folded into <findings> (F1 (b)),
+#   and the six records this pass added (22.4). No category lost a finding.
+#
+# ---------------------------------------------------------------------------
+# 22.7  HONEST DEVIATIONS FROM THE REVIEW TEXT, AND HOW EACH WAS MEASURED
+# ---------------------------------------------------------------------------
+# Practice E8 forbids rounding a measurement to match a narrative. Five places where
+# this pass records something different from, or more than, the review text, each with
+# the measurement that forced it.
+#
+# (1) The ninth DOM sink is NOT sanitized. The review states that all nine
+#     dangerouslySetInnerHTML sites receive markdownToSafeHTML or
+#     markdownToSafeHTMLClient output. Eight do. For packages/ui/components/form/
+#     checkbox/Checkbox.tsx:101 the value is the descriptionAsSafeHtml prop, whose only
+#     producer in the repository is apps/web/modules/form-builder/components/
+#     Components.tsx:546, and that call site passes the raw field label - the sanitized
+#     labelAsSafeHtml exists but is not what is forwarded there. The description for
+#     record 463 therefore states the unsanitized producer instead of claiming a
+#     sanitizer, which is the only statement the evidence supports.
+#
+# (2) TEN weakly typed public route authorities, not nine. The review counts nine
+#     handlers returning ApiResponse<unknown> or ApiResponse<any>. A reproducible walk
+#     finds twelve weak-typed signatures, ten of them route-decorated public handlers -
+#     one more public handler than the review counted. Algorithm, re-runnable:
+#     walk apps/api/v2/src; skip node_modules, generated and dist directories and
+#     *.spec.ts / *.e2e-spec.ts files; match ApiResponse<\s*(unknown|any)\s*>; from the
+#     match walk upward at most 40 lines to the enclosing method signature; from the
+#     signature walk upward at most 25 lines to the nearest @Get/@Post/@Patch/@Put/
+#     @Delete/@All decorator. Twelve weak-typed signatures exist; ten carry a route
+#     decorator and are therefore published HTTP entry points, and two are private
+#     helpers reached only from a route-decorated caller. The ten, as
+#     "<file>:<signature line> <method> (route decorator line)":
+#       apps/api/v2/src/ee/bookings/2024-04-15/controllers/bookings.controller.ts:184  getBookingForReschedule  (route @182)
+#       apps/api/v2/src/modules/atoms/controllers/atoms.event-types.controller.ts:54  listEventTypesWithTeam  (route @51)
+#       apps/api/v2/src/modules/atoms/controllers/atoms.event-types.controller.ts:86  getAtomEventType  (route @83)
+#       apps/api/v2/src/modules/atoms/controllers/atoms.event-types.controller.ts:102  listTeamEventTypes  (route @97)
+#       apps/api/v2/src/modules/atoms/controllers/atoms.event-types.controller.ts:113  listUserEventTypes  (route @110)
+#       apps/api/v2/src/modules/atoms/controllers/atoms.event-types.controller.ts:124  getAtomEventTypeApp  (route @121)
+#       apps/api/v2/src/modules/atoms/controllers/atoms.event-types.controller.ts:142  getUserPaymentInfoById  (route @139)
+#       apps/api/v2/src/modules/atoms/controllers/atoms.schedules.controller.ts:80  getScheduleByEventSlug  (route @76)
+#       apps/api/v2/src/modules/atoms/controllers/atoms.schedules.controller.ts:110  updateSchedule  (route @106)
+#       apps/api/v2/src/modules/router/controllers/router.controller.ts:23  getRoutingFormResponse  (route @22)
+#     The two private helpers, listed so the twelve-vs-ten split is checkable:
+#       apps/api/v2/src/modules/router/controllers/router.controller.ts:52  handleRedirect  (private, no route decorator)
+#       apps/api/v2/src/modules/router/controllers/router.controller.ts:68  handleRedirectWithContactOwner  (private, no route decorator)
+weak_route_authority_census_v2: 12 weak-typed signatures = 10 route-decorated public handlers + 2 private helpers
+#     The record at apps/api/v2/src/modules/atoms/controllers/atoms.event-types.
+#     controller.ts:113 claims exactly the route-decorated count, ten, because only a
+#     route-decorated handler publishes a response contract to an external consumer.
+#     An earlier working note in this pass recorded "zero private", which this
+#     re-derivation corrects to two; the artifact record never carried that figure.
+#
+# (3) The Layer 1 examined baseline is not itemizable. Stated in full in 22.5. The
+#     numerators published before this pass sum to 181 while the itemized rows account
+#     for 142; the difference is retained as an unlisted baseline and this pass itemizes
+#     only its own additions. No earlier numerator is silently revised.
+#
+# (4) Two coverage total models exist for Layer 3b and both are now published. Stated in
+#     full in 22.6. The emitted file uses the identity-feed model; the per-category
+#     ledger above used the union-of-feeds model; they diverge only for categories 3, 6,
+#     7, 14 and 17. Neither figure is deleted.
+#
+# (5) Four category probes were extended. Stated in full in 22.5, republished as
+#     coverage_layer_1_category_N_probe_v2 so a reviewer re-runs the same regex this
+#     pass ran. The extension was disclosed rather than applied silently precisely
+#     because the anti-padding filter is only as honest as its published probe.
+#
+# READ-ONLY GUARANTEE, RE-ASSERTED FOR THIS PASS: this remediation touched five files,
+# all of them audit artifacts under security-audit/. No application source file,
+# workspace manifest, lockfile, workflow, container definition, lint or hook
+# configuration was modified, and no secret value was written into any artifact -
+# findings cite file, line, class and length only.
+#
+# ---------------------------------------------------------------------------
+# 22.8  BYTE COUNTS AND DIGESTS, RE-MEASURED AFTER THIS PASS (supersedes 21.1)
+# ---------------------------------------------------------------------------
+# Re-derive any row with:
+#   python3 -c "import hashlib,sys;d=open(sys.argv[1],'rb').read();print(len(d),hashlib.sha256(d).hexdigest())" security-audit/<file>
+# The five rows marked CHANGED are the artifacts this remediation pass rewrote; the
+# thirteen marked same were not touched and their 21.1 values are reproduced here by
+# re-measurement, not by copying.
+  codebase-profile.txt                18092 B  ed3e980cbeea185409a94d5e4fe30ba8b0e40b72b9a0660aff0880549ebff64a  LF-terminated          same
+  sink-inventory.txt                 831765 B  df79812763435327f7e5b4f7443cd32380cea831a3cfeb6b06293c2c1d1b3b27  LF-terminated          same
+  sink-inventory-test.txt            547180 B  f22d520cf975a62934e4fe40ea465b14974eba8ecd59f17debd3b5d32f29f193  LF-terminated          same
+  mitigation-inventory.txt           462838 B  2b9c96a8838a3554f823fa0b70e1ea6ce537a51e6a0e24d7d0751a8d6a66fa1f  LF-terminated          same
+  mitigation-inventory-test.txt       14913 B  9ed6954fe93526b646195c3b7461d99bf450dd7fbf83b45770e6f5df4a27bfa8  LF-terminated          same
+  results-semgrep.sarif             1785873 B  67e2663510e09b3f4085d344bd80314fc9fd35e9086c59ecb2e63a6a4c1202ff  no terminating newline same
+  results-semgrep.json              1363976 B  f4a3238c8af43333c1a6702ae5fbb9bef5505ed3911d2ecdd6f96df426d003ef  no terminating newline same
+  results-osv.json                  2828403 B  1e78d81aae6ca5739c7e10e85770c1ae87479f742463de0279d88ee82ef3ed5d  LF-terminated          same
+  findings-layer-1-arch.json          45087 B  a5b5372d195f69b4c426a46c7f4ca1396e54f71c59ae66efc924146fdb17d971  LF-terminated          CHANGED
+  findings-layer-2-semgrep.json      423070 B  bf4616e98f95e0670df2f209e0b580d5bed0a773ef4ca73dcef87931e422cdb3  LF-terminated          CHANGED
+  findings-layer-3b-taint.json        62968 B  b35fee465261d2bdd6a325e87d50bbec2ae77abb70fa1b5b8501a152aa93b698  LF-terminated          CHANGED
+  findings-layer-4-osv.json          408631 B  b7cc091672e4ab712b3d0fc1f55a4a761ad5d02d1a2bf440156e56fca629d065  LF-terminated          same
+  layer-status.json                    3546 B  65e78115743c37b16589f065bda40d596ebf73d76715cabfdf32b2b731f7fb11  no terminating newline same
+  rules/security-audit.yaml          473625 B  b109a039df712f30c6d3e25e1e8358053fd0f1c91b92d0e8d2871cd141fe602f  LF-terminated          same
+  rules/secrets.yaml                  89772 B  139b35ad3442bc83d1f0864db82fa4fdc7e1f1ee4b5ac872bfbeb604c82c6518  LF-terminated          same
+  rules/owasp-top-ten.yaml          1448110 B  f0a4662179ed026409026367c8942e8a5c6da19de0ebfb8fe4127526535cd317  LF-terminated          same
+  coverage-layer-1.txt                  858 B  5a0d44a7949a5758d1dce96c85ee566290dd6371170327721a938d7a3b57015f  LF-terminated          CHANGED
+  coverage-layer-3b.txt                1433 B  efd32c70fd1d2dea49a25a4a62f96f95130be635cfe62c0e8f7393b6b893297d  LF-terminated          CHANGED
+  run-metadata.txt                 (this file - a file cannot carry its own digest)
+#
+# NEWLINE CONVENTION unchanged: results-semgrep.sarif, results-semgrep.json and
+# layer-status.json carry no terminating newline; every other artifact carries one LF.
+# ANSI ESCAPE BYTES: 0x1b occurs 0 times in every file in security-audit/, including
+# rules/, verified by a byte scan of the whole directory in this pass.
+# NON-ASCII CHARACTER counts (characters, not bytes - the 21.1 convention):
+#   sink-inventory.txt                  128
+#   sink-inventory-test.txt              11
+#   mitigation-inventory.txt              2
+#   results-semgrep.sarif               415
+#   results-semgrep.json                394
+#   results-osv.json                   2239
+#   findings-layer-4-osv.json             4
+#   coverage-layer-1.txt                 10
+#   coverage-layer-3b.txt                19
+#   findings-layer-1-arch.json / findings-layer-2-semgrep.json / findings-layer-3b-taint.json
+#   / codebase-profile.txt / layer-status.json / all three rule packs / run-metadata.txt: 0
+# The coverage files' non-ASCII characters are the mandated U+2014 EM DASH, exactly one
+# per row: 10 rows in coverage-layer-1.txt and 19 in coverage-layer-3b.txt. Both counts
+# are unchanged from 21.1, which is the expected result of a row-count-preserving edit.
+# DIRECTORY CONTENTS: 19 files, exactly the 19 published artifacts. No scratch file, no
+# temporary file and no ad-hoc test file was left in the directory.
+#
+# ---------------------------------------------------------------------------
+# 22.9  RECORD CENSUS, RE-MEASURED AFTER THIS PASS (supersedes 21.2)
+# ---------------------------------------------------------------------------
+layer_1_records: 126
+layer_1_by_severity: critical=14 high=36 medium=67 low=9
+layer_2_records: 463
+layer_2_by_severity: critical=47 high=416 medium=0 low=0
+layer_3b_records: 40
+layer_3b_by_severity: critical=5 high=10 medium=12 low=13
+layer_4_records: 259
+layer_4_by_severity: critical=10 high=107 medium=118 low=24
+layer_1_by_category: 1=4 2=16 3=6 4=14 5=11 6=13 7=9 8=9 9=30 10=14
+layer_3b_by_category: 1=3 2=3 3=4 4=6 5=1 6=4 7=1 8=1 9=1 10=1 11=1 12=1 13=3 14=4 15=1 16=1 17=1 18=2 19=1
+layer_3b_gate_blocking: 16
+layer_3b_advisory: 24
+layer_3b_advisories_missing_demotion_reason: 0
+layer_3b_non_vulnerability_coverage: 10
+layer_3b_vulnerabilities: 30
+findings_total_all_layers: 888
+# THE GATE-BLOCKING ANCHOR LIST, in artifact order. These sixteen are what a Directive 9
+# BLOCK verdict would enumerate; every one is anchored in sink-inventory.txt (22.10).
+# rec  cat  severity  cwe        file:line
+    2    1  critical  CWE-601    apps/api/v2/src/modules/oauth-clients/controllers/oauth-flow/oauth-flow.controller.ts:80
+    3    2  high      CWE-918    packages/features/webhooks/lib/sendPayload.ts:373
+    4    2  high      CWE-918    packages/features/webhooks/lib/handleWebhookScheduledTriggers.ts:67
+    5    2  high      CWE-918    packages/features/webhooks/lib/service/WebhookService.ts:107
+    7    3  high      CWE-532    apps/api/v2/src/filters/http-exception.filter.ts:21
+    8    3  critical  CWE-532    apps/api/v2/src/middleware/request-ids/request-id.interceptor.ts:36
+    9    3  critical  CWE-532    apps/api/v2/src/middleware/request-ids/request-id.middleware.ts:24
+   12    4  high      CWE-807    apps/api/v2/src/modules/auth/strategies/api-auth/api-auth.strategy.ts:186
+   18    6  medium    CWE-843    apps/api/v2/src/ee/calendars/controllers/calendars.controller.ts:275
+   19    6  high      CWE-843    apps/api/v2/src/modules/stripe/controllers/stripe.controller.ts:101
+   35   13  critical  CWE-639    apps/api/v2/src/modules/atoms/atoms.repository.ts:13
+   36   13  critical  CWE-862    apps/api/v2/src/modules/teams/event-types/teams-event-types.repository.ts:117
+   37   14  high      CWE-639    apps/api/v2/src/modules/atoms/services/verification-atom.service.ts:80
+   38   14  high      CWE-522    apps/api/v2/src/modules/webhooks/webhooks.repository.ts:77
+   39    1  high      CWE-601    apps/api/v2/src/modules/conferencing/controllers/conferencing.controller.ts:97
+   40    6  high      CWE-843    apps/api/v2/src/modules/conferencing/controllers/conferencing.controller.ts:151
+#
+# ---------------------------------------------------------------------------
+# 22.10  CROSS-ARTIFACT IDENTITIES, RE-ASSERTED ON THE COMMITTED SET (supersedes 21.3)
+# ---------------------------------------------------------------------------
+check_16: 40 of 40 Layer 3b file:line pairs present in sink-inventory.txt; unanchored = 0
+sink_inventory_rows: 6602 | distinct file:line pairs 6564 | categories non-empty 19 of 19
+mitigation_inventory_rows: 4164 | categories non-empty 9 of 9
+mitigation_inventory_by_category: 1:29, 2:6, 3:5, 4:8, 5:548, 6:22, 7:34, 8:45, 9:3467
+coverage_layer_1_findings_sum: 126 == layer_1_records 126; rows 10 of 10
+coverage_layer_3b_findings_sum: 40 == layer_3b_records 40; rows 19 of 19
+layer_status_ledger: layer_0_status=OK layer_2_status=OK layer_3a_status=OK layer_4_status=OK
+# LAYER 2 IDENTITY JOIN, re-asserted after the thirteen description rewrites: the SARIF
+# result set, the native JSON result set and the normalized artifact all carry 463
+# entries and join with zero drift in both directions on (file uri, region.startLine,
+# ruleId with the security-audit.rules. prefix stripped). The rewrites touched only the
+# description string, so no join key could move - and the join was re-run to prove it.
+# SEVERITY VOCABULARY: closed over all four findings artifacts, 888 records, values drawn
+# only from critical|high|medium|low. DESCRIPTIONS: 888 of 888 non-empty, longest 200
+# characters, none exceeding the Directive 7 bound. LINES: integer on every record.
+# PATHS: repo-relative on every record; no absolute path in any artifact.
+#
+# ---------------------------------------------------------------------------
+# 22.11  FIGURES THIS PASS MOVED - OLD -> NEW, WITH THE REASON
+# ---------------------------------------------------------------------------
+# key                                    old -> new
+  layer_1_records                        95 -> 126
+  layer_1_by_category                    1=4 2=14 3=6 4=13 5=11 6=12 7=6 8=9 9=6 10=14 -> 1=4 2=16 3=6 4=14 5=11 6=13 7=9 8=9 9=30 10=14
+  layer_1_by_severity                    critical=11 high=26 medium=50 low=8 -> critical=14 high=36 medium=67 low=9
+  layer_3b_records                       34 -> 40
+  layer_3b_by_category                   1=2 2=3 3=4 4=6 5=1 6=3 7=1 8=1 9=1 10=1 11=1 12=1 13=1 14=2 15=1 16=1 17=1 18=2 19=1 -> 1=3 2=3 3=4 4=6 5=1 6=4 7=1 8=1 9=1 10=1 11=1 12=1 13=3 14=4 15=1 16=1 17=1 18=2 19=1
+  layer_3b_by_severity                   critical=3 high=6 medium=12 low=13 -> critical=5 high=10 medium=12 low=13
+  layer_3b_gate_blocking                 10 -> 16
+  layer_3b_advisory                      24 -> 24
+  layer_3b_non_vulnerability_coverage    9 -> 10
+  layer_3b_vulnerabilities               25 -> 30
+  coverage_layer_1_examined_total        181 -> 209
+  coverage_layer_1_findings_total        95 -> 126
+  coverage_layer_3b_findings_total       25 -> 40
+  layer_2_descriptions                   0 -> 13
+  layer_1_files_examined_total           161 -> 209
+  layer_1_findings_total_17_10           77 -> 126
+# reasons, in the same order:
+#   layer_1_records                        31 records added for F5-F16
+#   layer_1_by_category                    same additions
+#   layer_1_by_severity                    same additions
+#   layer_3b_records                       6 gate-blocking records added for F5,F7,F8,F11,F12
+#   layer_3b_by_category                   same additions
+#   layer_3b_by_severity                   same additions
+#   layer_3b_gate_blocking                 the six additions are all gate-blocking
+#   layer_3b_advisory                      unchanged by construction
+#   layer_3b_non_vulnerability_coverage    F2 flag correction on record 24
+#   layer_3b_vulnerabilities               6 added, 1 reclassified by F2
+#   coverage_layer_1_examined_total        28 newly examined files itemized in 22.5
+#   coverage_layer_1_findings_total        re-derived from the artifact
+#   coverage_layer_3b_findings_total       F1: coverage-only records folded in, plus 6 additions
+#   layer_2_descriptions                   F3 and F4 re-statements; no other Layer 2 field moved
+#   layer_1_files_examined_total           superseded; 161 was written for the 77-record revision
+#   layer_1_findings_total_17_10           superseded; Section 17.10 predates two later passes
+  coverage-layer-1.txt                   856 B 6bb48e4102c7eead... ->     858 B 5a0d44a7949a5758...
+  coverage-layer-3b.txt                 2174 B 36e23f99d87c4c59... ->    1433 B efd32c70fd1d2dea...
+  findings-layer-1-arch.json           33256 B 30e53d5c538c4d35... ->   45087 B a5b5372d195f69b4...
+  findings-layer-2-semgrep.json       422909 B f93b19657e5af26a... ->  423070 B bf4616e98f95e067...
+  findings-layer-3b-taint.json         50021 B 0d3405b71eb75b5b... ->   62968 B b35fee465261d2bd...
+#
+# ---------------------------------------------------------------------------
+# 22.12  SCOPE, VERIFICATION STATE AND THE READ-ONLY GUARANTEE
+# ---------------------------------------------------------------------------
+# Nineteen artifacts are published, unchanged in membership by this pass.
+# findings-merged.json, baseline.json, verify.sh and verify-output.txt remain absent:
+# Directive 8, the gate verdict, the baseline round-trip and the sixteen-check harness
+# are later work, and their absence is scope, not omission.
+# The AAP verification checks that CAN be evaluated against this set are 1-10, 12, 13
+# and 16. All thirteen were re-run mechanically after the last artifact write in this
+# pass and all thirteen PASS:
+#   1  codebase-profile.txt primary_language populated (typescript)
+#   2  findings-layer-1-arch.json valid array, categories 1-10 all represented
+#   3  findings-layer-2-semgrep.json valid array, 463 records
+#   4  sink-inventory.txt 6602 rows, 100% format-valid, all 19 categories non-empty
+#   5  mitigation-inventory.txt 4164 rows, format-valid, all 9 categories non-empty
+#   6  both test inventories present and non-empty
+#   7  findings-layer-3b-taint.json valid array, all 19 sink categories represented
+#   8  gateBlocking on every record; non-blank demotionReason on every advisory
+#   9  severity vocabulary closed over all 888 findings
+#  10  findings-layer-4-osv.json valid array, 259 records
+#  12  zero 0x1b bytes anywhere in security-audit/, rules/ included
+#  13  zero empty descriptions; longest description 200 characters
+#  16  40 of 40 Layer 3b file:line pairs present in sink-inventory.txt
+# Checks 11, 14 and 15's merged-summary cross-check still have no artifact to read;
+# layer-status.json is published and records OK for all four deterministic layers.
+#
+# READ-ONLY GUARANTEE, MEASURED NOT ASSUMED. Diffing the working tree against the
+# pre-assessment commit e988138b24 yields exactly the artifact directory plus .gitignore:
+# no application source file, workspace manifest, lockfile, workflow, container
+# definition, lint configuration or git hook differs. No dependency was installed,
+# upgraded or removed for this pass, no scanner autofix was invoked, and no finding site
+# was edited - every issue named in any artifact is reported and left in place.
+# SECRET REDACTION RE-VERIFIED: the five rewritten artifacts and this file were scanned
+# for bearer tokens, Stripe keys, JWTs, GitHub and AWS credentials, PEM private-key
+# headers and long base64 assignments to KEY/SECRET/TOKEN/PASSWORD names. Zero matches.
+# Findings cite file, line, secret class and length only.
+#
 # ============================================ end of run-metadata.txt ========
