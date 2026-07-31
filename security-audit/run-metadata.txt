@@ -2897,4 +2897,168 @@ normalized_pass_live_targets_contacted: 0 - no network egress at all; the layer 
   the already-captured raw document, honouring SECURITY.md:L31-32
 normalized_pass_secret_values_written: 0
 
+# ============================================================================
+# SECTION 16 - DIRECTIVE 7 (LAYER 2 NORMALIZATION): findings-layer-2-semgrep.json
+# ============================================================================
+# The normalized Layer 2 artifact, compiled from results-semgrep.sarif joined with
+# results-semgrep.json into the AAP's unified finding schema. Recorded here because
+# the AAP requires the A7 severity consequence and the suppression accounting to be
+# DISCLOSED rather than hidden.
+normalized_l2_artifact: security-audit/findings-layer-2-semgrep.json
+normalized_l2_bytes: 364260
+normalized_l2_characters: 363472
+  The byte count exceeds the character count because ensure_ascii=False preserves
+  394 non-ASCII characters (3 UTF-8 bytes each, 1 UTF-16 unit each): 363472 + 394*2
+  = 364260. Confirmed by three independent methods - Python, on-disk size, and an
+  in-browser TextEncoder measurement that also matched the HTTP content-length.
+normalized_l2_sha256: a937e3e460f9a41b1dbd4ba36d718a36dfaebd5da7ccea10e69cbc90104b6a7f
+normalized_l2_findings: 463
+normalized_l2_determinism: BYTE-IDENTICAL across 7 consecutive normalizer runs (same sha256).
+  Layer 2 is a deterministic layer, so the normalization carries no agent judgement: every
+  field is a pure function of the two input documents.
+# -- Input whitelist (D4): exactly two documents, nothing else ----------------
+normalized_l2_input_authoritative: results-semgrep.sarif - severity (driver join), line, file, description, ruleId
+normalized_l2_input_enrichment: results-semgrep.json - CWE array, OWASP array, confidence/impact/likelihood
+normalized_l2_join_key: (ruleId/check_id, uri/path, region.startLine/start.line)
+normalized_l2_join_coverage: 463 of 463 matched, 0 missing, 0 orphans
+# -- A7: the severity JOIN, and the inflation it causes (disclosed, not hidden)
+normalized_l2_severity_source: SARIF driver defaultConfiguration.level, joined on result.ruleId.
+  MANDATORY because result.level is absent on 100% of the 463 results and the
+  security-severity property is present on 0 of the 725 rules.
+normalized_l2_severity_map: error->critical, warning->high, note->medium, info->low
+normalized_l2_severity_result_census: critical 47, high 416, medium 0, low 0 (sum 463)
+normalized_l2_severity_rule_census: error 231, warning 477, note 17 (sum 725)
+  THESE TWO MUST NOT BE CONFLATED. 231/477/17 count RULES in the driver list; 47/416/0/0
+  count RESULTS in this artifact. Only 14 of the 725 loaded rules actually fired.
+normalized_l2_medium_and_low_are_zero_because: no note-level rule matched a non-excluded
+  target. The 17 note-level rules remain LOADED, so this is an absence of MATCHES and
+  never an absence of coverage.
+normalized_l2_severity_inflation_disclosed: YES. Mapping SARIF 'warning' to 'high' and 'error'
+  to 'critical' is more severe than the scanner's own semantics, so 416 findings are recorded
+  high and 47 critical. Accepted because (a) the AAP is authoritative on its own vocabulary and
+  (b) the gate's BLOCK decision keys EXCLUSIVELY on Layer 3b exploitability, so inflation
+  cannot manufacture a block. The forbidden alternative - deriving critical from a combination
+  of level, impact and confidence - was NOT implemented.
+normalized_l2_vocabulary_union_evidence: the native pack vocabulary includes a MEDIUM token for
+  which the AAP's map has NO entry. It occurs on 2 findings (npm-missing-minimum-release-age and
+  yarn-missing-minimal-age-gate). Both were resolved by the SARIF level 'warning' -> high, which
+  is the A7 resolution working exactly as specified and is why SARIF, not the native severity,
+  is the severity source. Preserved per finding in the additive native_severity field.
+# -- P6: suppression accounting. NOTHING was suppressed, and here is why -----
+normalized_l2_suppressed_rule_1_test_stub_auth_guards: 0
+  The rule suppresses auth guards returning true in test files. NONE of the 14 fired rules is an
+  auth-guard rule, so the predicate is never satisfied. The predicate requires BOTH an
+  authorization token AND an unconditional-grant/bypass token in the rule identifier,
+  deliberately narrow so that detected-google-oAUTH-access-token - a secrets finding that must
+  be reported IN FULL - can never be captured by a loose /auth/ match.
+normalized_l2_suppressed_rule_2_build_time_shell_exec: 0
+  The rule suppresses shell execution with HARDCODED args in BUILD directories. It requires all
+  three conditions. The 3 run-shell-injection findings flag ${ github.* } variable
+  interpolation of untrusted context, and the 1 detect-child-process finding flags a command
+  built from a function argument - both are non-hardcoded by the rules' OWN message text, and
+  neither .github/ nor packages/app-store-cli/src/utils/ is a build directory. The hardcoded-args
+  test is evaluated against the UNTRUNCATED message so truncation cannot hide the evidence.
+normalized_l2_suppression_bias: deliberately under-suppress rather than over-suppress. The GLOBAL
+  RULE forbids silent omission, so reporting more is safe while dropping a real finding is a
+  defect. Inventing a third suppression rule is not permitted.
+normalized_l2_findings_emitted_vs_scanned: 463 of 463 - zero dropped, zero deduplicated.
+  Deduplication is inter-layer only and happens solely in findings-merged.json (A8).
+normalized_l2_test_file_located: 5 of 463, recorded in the additive test_file flag for downstream
+  Layer 3b triage. This is transparency, NOT suppression - all 5 are emitted.
+normalized_l2_secrets_pack_findings: 5 of 463, ALL PRESENT and counted. Reported in full because
+  regex secret detection is documented to be false-positive prone, so they pass through Layer 3b
+  triage before any of them may set gateBlocking.
+# -- CWE selection, consistent with this file's OBLIGATION 3 rule ------------
+normalized_l2_cwe_resolved: 463 of 463 (100%); 0 unresolved; 9 distinct CWEs chosen
+normalized_l2_cwe_source: native_json_metadata on 463; the SARIF ^CWE-\d+ rule-tag fallback is
+  implemented and was cross-checked - the two independent sources DISAGREED on 0 findings.
+normalized_l2_cwe_distribution: CWE-732 255, CWE-353 139, CWE-250 37, CWE-79 13, CWE-345 7,
+  CWE-798 5, CWE-78 4, CWE-829 2, CWE-310 1
+normalized_l2_cwe_selection_basis: sole_candidate 316, generic_parent_dropped 139,
+  generic_retained_no_specific_candidate 8
+normalized_l2_cwe_multi_candidate_decision: exactly one fired rule offers more than one CWE -
+  github-actions-mutable-action-tag, authored as [CWE-1357, CWE-353]. CWE-1357 is a Class-level
+  weakness and CWE-353 is Base-level, and CWE-353 is additionally a documented child of CWE-345,
+  so CWE-353 is the more specific classification. The remediation the rule itself prescribes -
+  pin to a full-length commit SHA - is literally the addition of an integrity check, which is
+  what CWE-353 names. The Class is therefore dropped under step 2 of the OBLIGATION 3 rule and
+  CWE-353 is recorded on all 139 findings. E2 satisfied.
+normalized_l2_cwe_generic_retained: CWE-345 (7 findings, wildcard-postmessage) and CWE-310
+  (1 finding, gcm-no-tag-length; literally a CWE CATEGORY rather than a weakness). Both are the
+  SOLE candidate their rule offers, so each is retained rather than losing its classification -
+  the same treatment this file records for 46 Layer 4 records. The AAP permits inferring a CWE
+  only when metadata CWE is ABSENT, and it is not absent here, so no substitute was invented.
+  Every candidate is preserved in the additive cwe_all field, so the selection is reversible.
+# -- E1 / E3 / E5 / E7 ------------------------------------------------------
+normalized_l2_owasp_coverage: 463 of 463 findings carry OWASP categories (15 distinct), carried
+  through from the native metadata per E1.
+normalized_l2_fingerprint_used: NO. results[].fingerprints is the OSS sentinel "requires login",
+  so it is unusable as a key and is deliberately never read (P5).
+normalized_l2_snippet_read: NO. locations[].physicalLocation.region.snippet.text is present on
+  463 of 463 results and is NEVER read by the normalizer, because it can carry matched source
+  text. The artifact therefore cannot inherit a credential from it.
+normalized_l2_secret_safety_proof: STRUCTURAL, not asserted. Descriptions derive solely from
+  message.text, which is per-RULE prose, so the count of distinct descriptions must not exceed
+  the count of distinct fired rules. MEASURED: 14 distinct descriptions for 14 distinct rules -
+  exact. A leaked per-RESULT value would have broken this invariant. Independently swept for
+  provider secret patterns (Stripe, AWS, GitHub, Slack, Google, PEM, JWT, bearer, basic-auth):
+  zero hits; and all 26 non-trivial .env.example values: zero present, so the CRON_API_KEY value
+  is definitively absent.
+normalized_l2_description_derivation: SARIF message.text, whitespace-normalized then truncated at
+  a word boundary to at most 200 characters. 451 of 463 required truncation (source range
+  34-541 chars). Truncation is HEAD-PRESERVING: every one of the 14 rule messages states the
+  vulnerability in its opening sentence and carries remediation advice in the tail, so the
+  mandated semantics - state the vulnerability, never echo a rule id - survive. No ellipsis
+  marker is appended, matching both sibling findings artifacts; the fact is preserved losslessly
+  in the additive description_truncated flag. Emitted range 34-199 characters.
+# -- E8: the coverage limit. Layer 2 SILENCE IS NOT ABSENCE OF A FINDING -----
+normalized_l2_coverage_limit_disclosed: YES, and measured on the emitted artifact:
+    packages/lib/crypto.ts     0 Layer 2 findings
+    packages/lib/rateLimit.ts  0 Layer 2 findings
+  The scanner has NO rule for the encryption-key reuse in crypto.ts (aes256 at L3, Latin1 key
+  decoding at L16 and L32, one CALENDSO_ENCRYPTION_KEY serving both symmetric 2FA encryption and
+  HS256 token signing) nor for the three fail-open returns in rateLimit.ts (L41, L44, L55).
+  Pattern-based SAST is documented to under-perform on authentication, access control and
+  cryptography. This silence MUST NOT be presented as an absence of a finding - it is precisely
+  why Layer 1 is additive rather than duplicative, and Layer 1 does report both conditions.
+# -- Cross-layer: the assessment's only genuine corroboration ----------------
+normalized_l2_corroboration_pair: dockerfile.security.missing-user.missing-user fires exactly
+  twice, at Dockerfile:94 and apps/api/v2/Dockerfile:26 (the CMD lines, taken from SARIF
+  region.startLine as the AAP mandates), both error-level -> critical, both CWE-250.
+normalized_l2_merge_key_intersection_with_layer_1: EXACTLY 2 shared (file, line, cwe) keys -
+  ("Dockerfile", 94, "CWE-250") and ("apps/api/v2/Dockerfile", 26, "CWE-250"). Layer 1
+  independently anchored the SAME two lines, so the join is exact and requires no line
+  reconciliation. This is what yields corroborated = 2 in findings-merged.json.
+normalized_l2_merge_key_intersection_with_layer_4: 0 shared keys (Layer 4 is entirely
+  yarn.lock:0), so no corroboration can be fabricated between those layers.
+normalized_l2_a7_side_effect_on_the_pair: Layer 1 rates this condition medium while Layer 2 rates
+  it critical, so under the merge's keep-the-higher-severity rule the scanner's inflated value
+  wins. Harmless - BLOCK keys exclusively on Layer 3b - but recorded so a reviewer comparing
+  merged severities against the Layer 1 artifact is not surprised.
+# -- Schema conformance -----------------------------------------------------
+normalized_l2_schema_keys: 20 - the 7 mandated (file, line, severity, cwe, description, layer,
+  tool) FIRST and in the schema's own order, then 13 additive provenance fields (rule,
+  sarif_level, native_severity, cwe_all, cwe_source, cwe_selection, owasp, confidence, impact,
+  likelihood, description_truncated, secrets_pack, test_file). Additive fields follow the
+  convention already set by the sibling artifacts (Layer 4 carries 24 keys, Layer 1 carries 8).
+normalized_l2_rule_id_prefix_stripped: YES - "security-audit.rules." appears nowhere in the
+  artifact, and the normalizer aborts if any driver rule id lacks it (which would prove the scan
+  had used an absolute --config path and baked the host path into all 725 rule ids).
+normalized_l2_pass_single_line_minified: 1 line, 0 embedded newlines, compact separators
+normalized_l2_pass_ansi_escape_bytes: 0
+normalized_l2_pass_integer_line: 463 of 463
+normalized_l2_pass_description_bounds: 463 of 463 within 1..200
+normalized_l2_pass_severity_vocabulary: closed at critical|high|medium|low
+normalized_l2_pass_repo_relative_paths: 463 of 463, 81 distinct, 0 absolute, 0 machine-specific
+normalized_l2_pass_layer_and_tool: layer=2 and tool="semgrep" on 463 of 463
+normalized_l2_pass_dependencies_installed: 0
+normalized_l2_pass_live_targets_contacted: 0 - no network egress; the normalizer reads only the
+  two already-captured documents, honouring SECURITY.md:L31-32
+normalized_l2_pass_secret_values_written: 0
+normalized_l2_pass_source_files_modified: 0 - assessment only, nothing remediated
+normalized_l2_validation: 40 of 40 ad-hoc checks pass, hardened against 23 adversarial negative
+  controls with zero empty-reason failures; plus 22 of 22 independent assertions in a real V8
+  runtime, whose received-body sha256 matched the on-disk artifact byte for byte.
+layer_2_status: OK
+
 # ============================================ end of run-metadata.txt ========
