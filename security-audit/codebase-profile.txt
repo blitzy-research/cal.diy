@@ -213,9 +213,9 @@ exclude_dirs: node_modules, .next, out, build, dist, .turbo, coverage, /test-res
 #   source files, command 5's exclusions   7434
 #   source files after exclude_dirs        7433
 #   JS/TS set Layer 3a sweeps              7432  (6360 primary + 1072 test)
-#   sink inventory rows                    6604 primary + 3978 test = 10582
+#   sink inventory rows                    6602 primary + 3978 test = 10580
 #   mitigation inventory rows              4164 primary +  118 test =  4282
-# The two union totals, 10582 and 4282, are the drift-stable figures: reclassifying a
+# The two union totals, 10580 and 4282, are the drift-stable figures: reclassifying a
 # file moves rows between the partitions without creating or destroying any, so a run
 # that reproduces the unions but splits them differently has a predicate difference,
 # not a recall difference.
@@ -232,8 +232,12 @@ exclude_dirs: node_modules, .next, out, build, dist, .turbo, coverage, /test-res
 # primary partition and 0 in the test partition, independently reproducing the
 # five-call-site timingSafeEqual census taken during the architectural walk.
 # The plan lists cookie handling as a fourth small category at 3 lines; with the IR14
-# pattern augmentation applied it measures 44 lines in 17 files, 11 of them in
-# packages/lib/default-cookies.ts, so it is not a canary.
+# pattern augmentation applied it measures 42 lines in 16 files, 11 of them in
+# packages/lib/default-cookies.ts, so it is not a canary. The generic 'secure:' token
+# in that augmentation qualifies a line only when a case-insensitive 'cookie' token
+# occurs within ten lines of it; the eight cookie-specific tokens qualify
+# unconditionally. That condition is what keeps nodemailer SMTP TLS options out of the
+# cookie category, and the exact token set is recorded in run-metadata.txt.
 
 # Status
 #

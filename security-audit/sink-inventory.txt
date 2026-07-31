@@ -5199,8 +5199,6 @@ packages/lib/server/username.ts:197:13:  !!(await prisma.tempOrgRedirect.findUni
 packages/lib/server/username.ts:227:13:  const user = await prisma.user.findUnique({
 packages/lib/server/username.ts:240:13:    const userIsAMemberOfAnOrg = await prisma.membership.findFirst({
 packages/lib/server/username.ts:266:13:  const users = await prisma.user.findMany({
-packages/lib/serverConfig.ts:12:9:      secure: true,
-packages/lib/serverConfig.ts:41:9:      secure: port === 465,
 packages/lib/smsLockState.ts:35:13:    const user = await prisma.user.findUnique({ where: { id: userId, profiles: { none: {} } } });
 packages/lib/smsLockState.ts:48:13:    const team = await prisma.team.findUnique({
 packages/lib/ssrfProtection.ts:6:3:const log: ReturnType<typeof logger.getSubLogger> = logger.getSubLogger({ prefix: ["ssrf-protection"] });
