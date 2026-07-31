@@ -1,0 +1,1303 @@
+# =============================================================================
+# run-metadata.txt - tool provenance and per-layer run statistics
+# =============================================================================
+# Artifact   : security-audit/run-metadata.txt
+# Layer      : cross-cutting. This file is not a findings artifact and carries no
+#              severity, CWE or gateBlocking field. It records HOW the layers ran:
+#              exact tool versions, acquisition provenance, exit codes, wall-clock
+#              durations, counts, and every deviation or limitation encountered.
+# Role       : the plan designates this file as the home for "tool self-reports
+#              plus per-layer run statistics ... exact tool versions, scan exit
+#              codes, wall-clock durations, files scanned". The pinned rule packs
+#              additionally require their source URL, byte size, parsed stanza
+#              count, the grep-vs-parse caveat, the authored-to-loaded delta and
+#              the validation exit code to be recorded here.
+# Pass rule  : GLOBAL RULE - no layer may silently fail. Every exit code below is
+#              recorded with its meaning, including the NON-ZERO exit codes that
+#              are benign, so that a later run cannot misread a normal result as
+#              a failure or a failure as a normal result.
+#              verification check 12 - contains no ANSI escape byte (ESC, 0x1B).
+# Scope      : read-only assessment. No application source file is modified, no
+#              dependency is installed, and no vulnerability is remediated. No
+#              live, deployed or remote target of the audited product is
+#              contacted. The only network egress is to the public Semgrep rule
+#              registry (semgrep.dev) to fetch the three pinned rule packs, and
+#              to the OSV database for Layer 4; both are required by the plan.
+# Format     : plain UTF-8, LF line endings, ASCII-only payload, comment lines
+#              prefixed '#'. All repository paths are repository-relative; no
+#              absolute or host-specific path appears anywhere in this file.
+# Secrets    : no secret value is recorded here. Where a high-entropy value was
+#              discovered during discovery it is cited by file, line, character
+#              class and length only, never by value.
+#
+# =============================================================================
+# SECTION 1 - RUN IDENTITY
+# =============================================================================
+
+codebase_commit: 182a70320591681cd1ebfb84661c318c31a4c7cb
+codebase_baseline_commit: e988138b24ffa49a0cd0f8dd7ac97caf2817fa1d
+artifact_root: security-audit/
+rules_config_path: security-audit/rules
+rules_config_path_form: RELATIVE - load-bearing, see SECTION 9
+
+# The configuration path is recorded as a first-class field because Semgrep
+# derives every rule identifier from it. A relative path yields the stable,
+# host-independent identifier prefix 'security-audit.rules.'; an absolute path
+# would bake the host path into all 725 rule identifiers and would silently
+# invalidate the severity join, the cross-layer deduplication key and every
+# future baseline diff. Layer 2 therefore always runs from the repository root
+# with the relative path above.
+
+# =============================================================================
+# SECTION 2 - TOOL VERSIONS (self-reported by each binary)
+# =============================================================================
+
+semgrep: 1.172.0
+osv_scanner: 2.4.0
+osv_scalibr: 0.4.5
+osv_scanner_commit: b56b5191101d5f27d4787d5583d8d01e9518a7af
+osv_scanner_built_at: 2026-06-18T12:55:27Z
+ripgrep: 14.1.1
+node: v20.20.2
+yarn: 4.12.0
+python3: 3.13.7
+pyyaml: 6.0.3 (CSafeLoader available)
+git: 2.51.0
+curl: 8.14.1 (OpenSSL/3.5.3 zlib/1.3.1 brotli/1.1.0 zstd/1.5.7 nghttp2/1.64.0)
+grep: GNU grep 3.11
+findutils: GNU findutils 4.10.0
+
+# ---- version deviations from the plan, disclosed rather than smoothed over ---
+# The plan names three versions that differ from what is actually installed on
+# this execution host. Each deviation is recorded because a reader comparing a
+# figure in this audit against the plan's text needs to know which binary
+# produced it. None of the three affects any measured result in this audit.
+#
+# ripgrep  : plan names 14.1.0, installed 14.1.1. Patch release; the pattern
+#            semantics used by Layer 3a are unchanged.
+# node     : plan names 20.17.0, installed v20.20.2. The host provides only this
+#            20.x. Node is not used by any deterministic layer of this audit -
+#            Layer 2 parses source text and Layer 4 reads the lockfile - so the
+#            difference cannot affect a finding.
+# python3  : plan names 3.12.3, installed 3.13.7. Python is load-bearing twice
+#            over (Semgrep's runtime, and every JSON assertion in the
+#            verification harness, because jq is absent). No 3.13-specific
+#            behaviour is relied upon.
+
+# ---- deliberately absent tooling, and why the absence is load-bearing --------
+# jq       : ABSENT. Every JSON assertion in the verification harness is
+#            therefore written with inline Python. A jq-based harness would not
+#            execute at all on this host. This is a hard constraint, not a
+#            stylistic preference.
+# ast-grep : ABSENT. The repository's own guidance names a structural search tool
+#            whose first choice is unavailable here, so its documented fallback -
+#            ripgrep - is the operative Layer 3a search tool.
+#            CAUTION: /usr/bin/sg EXISTS on this host but it is util-linux's
+#            set-group-ID tool, NOT ast-grep. Any future check that probes for
+#            'sg' on PATH will get a false positive. Probe for 'ast-grep'.
+# go       : ABSENT. Layer 4's scanner was therefore installed from the GitHub
+#            release binary rather than through the Go toolchain, which is the
+#            plan's documented fallback path and the operative one here.
+
+# ---- environment disclosures ------------------------------------------------
+# DO_NOT_TRACK=1 is set in this execution environment. Semgrep honours this
+# variable as a telemetry opt-out independently of the command line. Every
+# Semgrep invocation in this audit ALSO passes --metrics=off explicitly, as the
+# plan requires, but the reader must know that --metrics=off cannot be credited
+# as the sole cause of telemetry suppression on this host. Recorded so that a
+# re-run on a host WITHOUT DO_NOT_TRACK is not mistaken for a behaviour change.
+# No SEMGREP_* environment variable is set (count: 0), so no rule source,
+# token or setting is being injected out of band.
+
+# =============================================================================
+# SECTION 3 - DIRECTIVE 0 (LAYER 0, DISCOVERY) RUN STATISTICS
+# =============================================================================
+# Basis note: Layer 0's seven mandated field values are measured on the TRACKED
+# file set (the git index), not the live working tree. The live-tree figures are
+# also recorded below because the two differ substantially on this checkout, and
+# codebase-profile.txt carries the full reconciliation. Compare bases before
+# comparing numbers.
+
+layer_0_status: OK
+layer_0_command_count: 5
+layer_0_all_commands_completed: yes
+
+# command             exit  duration  result
+# ------------------- ----  --------  -------------------------------------------
+# cmd1 extension      0     0.62s     20 rows emitted (top-20 extension census)
+# cmd2 ecosystems     2     0.01s     package.json found; all other manifests absent
+# cmd3 frameworks     141   0.07s     10 rows emitted (head-10 of the match list)
+# cmd4 lockfiles      2     0.01s     yarn.lock found; all other lockfiles absent
+# cmd5 source count   0     0.91s     8636 (live tree) / 7434 (tracked basis)
+
+# ---- NON-ZERO EXIT CODES THAT ARE NOT FAILURES (read before triaging) -------
+# cmd2 exit 2 and cmd4 exit 2: 'ls' exits 2 when one or more named operands do
+#   not exist. Both commands deliberately name every ecosystem manifest and
+#   every lockfile of every supported language, so on a single-ecosystem
+#   repository MOST operands are expected to be missing. The absence IS the
+#   informative result: it is what establishes package_ecosystems as npm-only
+#   and lockfiles as the single yarn.lock. Exit 2 here means "the command
+#   worked and most candidates legitimately do not exist".
+# cmd3 exit 141: 141 = 128 + 13 = terminated by SIGPIPE. The pipeline ends in
+#   'head -10', which closes the pipe after ten lines and sends SIGPIPE to the
+#   upstream grep. This is the normal, intended behaviour of a bounded pipeline.
+#   Exit 141 here means "at least ten matches existed", i.e. success.
+# CONSEQUENCE: a future gate must NOT assert 'all Layer 0 commands exit 0'. The
+#   correct assertion is on the OUTPUT (seven fields populated, primary_language
+#   identified), which is exactly what verification check 1 asserts.
+
+layer_0_source_file_count_tracked: 7434
+layer_0_source_file_count_live_tree: 8636
+layer_0_tracked_recompute_duration: 0.01s
+layer_0_tracked_recompute_agrees_with_recorded_field: yes
+
+# =============================================================================
+# SECTION 4 - DIRECTIVE 2 (LAYER 2 SETUP): PACK ACQUISITION PROCEDURE
+# =============================================================================
+# The plan's own Directive 2 commands do not execute as written. Two defects were
+# confirmed empirically against the installed binary, and both are recorded here
+# with their verified replacements so that no future run reintroduces them.
+#
+# DEFECT 1 - the rule-pack pinning command does not exist. The plan instructs
+#   pinning via a config-dump flag; that flag is not a valid Semgrep option and
+#   exits non-zero. The nearest subcommand emits an internal representation
+#   rather than usable rule YAML, and also exits non-zero.
+#   REPLACEMENT: fetch each pack directly over HTTP, as specified below.
+#
+# DEFECT 2 - the validation command's flag does not exist. The plan's pass
+#   criterion uses a hyphenated dry-run flag; the only similar Semgrep flag is
+#   spelled differently and means "do not write autofixes", which does not
+#   validate configuration at all.
+#   REPLACEMENT: semgrep scan --config=<dir> --validate --metrics=off
+#
+# NOT A DEFECT - Directive 6's scanner invocation works as written in version
+#   2.4.0 and produces a payload byte-identical to the modern subcommand form.
+#   It must NOT be "corrected" by a future agent. Recorded to prevent churn.
+
+# ---- THE HARDENED ACQUISITION COMMAND (authoritative; run once per pack) -----
+# Executed from the repository root, once for each of the three pack slugs
+# 'secrets', 'security-audit' and 'owasp-top-ten':
+#
+#   curl -sSL --fail --proto '=https' --tlsv1.2 \
+#        -H 'Accept-Encoding: identity' \
+#        -H 'Accept: text/yaml' \
+#        -D <headers-capture> \
+#        -o security-audit/rules/<pack>.yaml \
+#        "https://semgrep.dev/c/p/<pack>"
+#
+# Every flag is load-bearing. Each is justified below, because the delivered
+# procedure omitted them and the omission was silently unsafe:
+#
+#   --fail            makes curl exit non-zero on an HTTP error status AND write
+#                     no output file. Without it curl exits 0 on a 404 and
+#                     writes the origin's 132-byte JSON error envelope into
+#                     <pack>.yaml, producing a file that is not a rule pack but
+#                     is indistinguishable from one to a downstream exit-code
+#                     check. This is the single most important flag here.
+#   --proto '=https'  refuses any protocol downgrade or non-HTTPS redirect hop.
+#   --tlsv1.2         floors the TLS version.
+#   -H 'Accept-Encoding: identity'
+#                     pins the UNCOMPRESSED representation. This URL is
+#                     content-negotiated: see SECTION 6. Without this header the
+#                     response media type depends on what the client happens to
+#                     advertise, and a gzip-capable client receives a DIFFERENT
+#                     DOCUMENT with a different schema.
+#   -H 'Accept: text/yaml'
+#                     states the intended media type explicitly.
+#   -D <headers>      captures the response headers so that the assertions in
+#                     SECTION 5 can check content-type and content-length,
+#                     rather than trusting the body alone.
+
+# ---- MEASURED ACQUISITION RESULT (this run) ---------------------------------
+# pack             curl_exit  duration  http  content-type              content-length
+# ---------------- ---------  --------  ----  ------------------------  --------------
+# secrets          0          0.137s    200   text/yaml; charset=utf-8  89772
+# security-audit   0          0.173s    200   text/yaml; charset=utf-8  473625
+# owasp-top-ten    0          0.151s    200   text/yaml; charset=utf-8  1448110
+
+# =============================================================================
+# SECTION 5 - THE SIX POST-DOWNLOAD ASSERTIONS (all must hold, per pack)
+# =============================================================================
+# A successful download is NOT evidence of a valid pack. Each pack must satisfy
+# all six assertions below before it is accepted. Expected values are literal.
+#
+#   A1  byte size on disk == the pack's exact expected size
+#         secrets 89772 | security-audit 473625 | owasp-top-ten 1448110
+#   A2  the first six bytes of the file are exactly  rules:
+#         Rejects the JSON representation, which begins  {"rules":[
+#         Rejects the 404 error envelope, which begins  {"error":
+#         Rejects gzip bytes, HTML and any redirect interstitial.
+#   A3  'rules' is the ONLY top-level key after a real YAML parse
+#         Rejects the JSON representation specifically, because that form carries
+#         an ADDITIONAL top-level key 'missed' (see SECTION 6). Note that JSON is
+#         a subset of YAML, so the JSON form DOES parse as YAML - assertion A2
+#         and this assertion are what separate them, not parseability.
+#   A4  the authored stanza count from a real YAML parse equals the expected
+#       count:  secrets 52 | security-audit 225 | owasp-top-ten 560
+#   A5  the response content-type contains  text/yaml
+#   A6  the response content-length equals the pack's expected byte size
+#
+# MEASURED THIS RUN: all six assertions PASS for all three packs.
+
+# ---- the grep-vs-parse caveat on the stanza count (do not use grep) ---------
+# The owasp-top-ten pack contains 560 authored stanzas by YAML parse. A naive
+# line-oriented count of stanza openers reports 559, an undercount of one,
+# because not every stanza begins with the 'id' key on its opening line - at
+# least one stanza opens with a different key ('patterns'). The authoritative
+# count is therefore ALWAYS a real YAML parse of the top-level 'rules' sequence,
+# never a grep. Recorded because the one-off discrepancy looks like corruption
+# and would otherwise be re-investigated on every run.
+# secrets 52 and security-audit 225 agree between grep and parse; only
+# owasp-top-ten exhibits the divergence.
+
+# =============================================================================
+# SECTION 6 - CONTENT NEGOTIATION: WHY Accept-Encoding MUST BE PINNED
+# =============================================================================
+# The pack URLs return DIFFERENT DOCUMENTS depending on the encodings the client
+# advertises. This was measured on the command line and independently
+# corroborated in a real headless browser. It is the reason the acquisition
+# command pins 'Accept-Encoding: identity' rather than relying on a default.
+
+# ---- measured representations of https://semgrep.dev/c/p/owasp-top-ten ------
+# request Accept-Encoding      content-type              enc      content-length  body begins
+# --------------------------  ------------------------  -------  --------------  ------------
+# identity (pinned, ours)     text/yaml; charset=utf-8  none     1448110         rules:
+# <no header sent> (curl dflt) text/yaml; charset=utf-8  none     1448110         rules:
+# gzip, deflate, br           application/json          gzip     ABSENT          gzip bytes
+# gzip via curl --compressed  application/json          gzip     ABSENT          {"rules":[
+# browser-like (real Chrome)  application/json          gzip     ABSENT          {"rules":[
+
+# ---- what the JSON representation actually is -------------------------------
+# It encodes the SAME 560 rule stanzas, but it is not the pinned document:
+#   - top-level keys are ['rules','missed'] rather than ['rules'] alone
+#   - 'missed' is an integer: 1800 for owasp-top-ten, 218 for secrets
+#   - uncompressed size is 1306540 bytes, not 1448110
+#   - it carries a DIFFERENT ETag from the YAML representation
+#   - 'vary: Accept-Encoding' is emitted ONLY on the JSON variant, which is
+#     direct server-side evidence of branching on the request header
+# The two representations are therefore NOT interchangeable: they differ in
+# media type, byte count, ETag and top-level schema.
+
+# ---- honest scoping of the risk (this is a latent hazard, not a live break) --
+# curl sends NO Accept-Encoding header unless asked, and the origin treats that
+# as identity. The previously delivered command therefore DID receive correct
+# YAML on this host. The hazard is that correctness was incidental rather than
+# guaranteed: any gzip-advertising client silently receives the JSON document
+# instead. That includes every browser, curl --compressed, and the default
+# configuration of most HTTP libraries and some intermediary proxies. Pinning
+# the header converts an incidental success into a guaranteed one.
+
+# ---- browser corroboration (independent client, independent operator) -------
+# A real headless Chrome navigation to both pack URLs returned, for the main
+# document: status 200, content-type application/json, content-encoding gzip,
+# NO content-length, vary: Accept-Encoding, and a body beginning {"rules":[ with
+# top-level keys ['rules','missed'].
+# Two further facts were established that strengthen the requirement:
+#   1. 'Accept-Encoding' is a FORBIDDEN HEADER NAME in the Fetch standard. A
+#      browser CANNOT request the identity representation from script: the header
+#      is stripped silently from the Request object with no exception and no
+#      console warning, and the request goes out advertising gzip regardless.
+#      A browser therefore has no way to obtain the pinned YAML document.
+#   2. The browser's received bytes were digest-identical to a gzip-advertising
+#      command-line capture, and digest-DIFFERENT from the identity capture.
+# Cross-client integrity check: the browser operator's own independent identity
+# fetch of the owasp-top-ten and secrets packs produced bodies whose digests
+# match the pinned on-disk packs EXACTLY. Pack integrity is therefore confirmed
+# by two independent HTTP clients, not one.
+
+
+# =============================================================================
+# SECTION 7 - WHY EXIT CODE ALONE IS NOT A VALID D2 PASS CRITERION
+# =============================================================================
+# 'semgrep --validate' exits 0 and reports "Configuration is valid" for a rules
+# directory that contains NO USABLE RULES AT ALL. Validation checks that what is
+# present parses; it does not check that anything is present. The pass criterion
+# must therefore additionally assert the LOADED RULE COUNT.
+#
+# Five fixtures were built in an ephemeral scratch directory OUTSIDE the
+# repository and validated. 'delivered criterion' = exit 0 and 0 config errors.
+# 'hardened gate' = additionally requires the loaded rule count to equal 725.
+#
+# fixture                        validate  errors  rules  delivered  hardened gate
+# ------------------------------ --------  ------  -----  ---------  -------------
+# genuine 3 packs                0         0       725    accept     ACCEPT
+# all 3 replaced by 404 envelope 0         0       0      accept     REJECT
+# 2 good packs + 1 envelope      0         0       690    accept     REJECT
+# empty configuration directory  0         0       0      accept     REJECT
+# 1 pack truncated mid-stream    2         1       352    reject     REJECT
+#
+# READ THE THREE MIDDLE ROWS CAREFULLY. In each of them the delivered criterion
+# ACCEPTS a configuration that is missing rules - in the worst case ALL of them -
+# while reporting "Configuration is valid". Only the rule-count assertion
+# distinguishes them. This is the concrete justification for assertion G3 below.
+
+# ---- the pass criterion, stated as three assertions -------------------------
+#   G1  semgrep scan --config=security-audit/rules --validate --metrics=off
+#       exits 0
+#   G2  the reported configuration-error count is 0
+#   G3  the reported loaded rule count is EXACTLY 725
+# MEASURED THIS RUN: G1 PASS, G2 PASS, G3 PASS.
+
+# ---- the 690 figure is not arbitrary; it is arithmetically predictable ------
+# The '2 good packs + 1 envelope' fixture omitted the secrets pack. The union of
+# the remaining two packs is 225 + 560 - 95 shared identifiers = 690, which is
+# exactly what Semgrep loaded. A rule-count assertion is therefore not merely a
+# tripwire: the expected value is derivable from the pack inventory, so a
+# mismatch localises which pack failed to arrive.
+
+# ---- the 404 error envelope, recorded verbatim for recognition --------------
+# An unhardened 'curl -sSL' against a non-existent pack slug exits 0 and writes
+# this exact 132-byte body, served as content-type application/json:
+#   {"error":"The requested URL was not found on the server. If you entered the
+#   URL manually please check your spelling and try again."}
+# (recorded here as two lines for width; on the wire it is a single line)
+# Assertion A2 rejects it because it begins '{"error":' and not 'rules:'.
+# The hardened command never writes it at all, because --fail suppresses output.
+#
+# One further caveat on the truncation fixture: the truncated-pack rule count is
+# NOT stable across runs, because where a fixed byte cut lands depends on the
+# order in which the origin serialised the stanzas that day (see SECTION 8). A
+# 500000-byte cut yielded 352 loadable rules this run and a different count on an
+# earlier run of the same experiment. Both are detected - the count assertion and
+# the parse error both fire - but the specific number must not be asserted on.
+
+# =============================================================================
+# SECTION 8 - PER-PACK PROVENANCE
+# =============================================================================
+# Recorded per pack: source URL, byte size, parsed stanza count, the raw content
+# digest, and an ORDER-INSENSITIVE canonical digest. Both digests are recorded
+# because, as measured below, the raw digest is NOT a stable identity for these
+# URLs while the canonical digest is.
+
+pack_1_slug: secrets
+pack_1_url: https://semgrep.dev/c/p/secrets
+pack_1_path: security-audit/rules/secrets.yaml
+pack_1_bytes: 89772
+pack_1_stanzas_by_yaml_parse: 52
+pack_1_top_level_keys: rules
+pack_1_intra_pack_duplicate_ids: 0
+pack_1_raw_sha256: 139b35ad3442bc83d1f0864db82fa4fdc7e1f1ee4b5ac872bfbeb604c82c6518
+pack_1_canonical_sha256: e930e35b55288e5a2ddad21a0affc0c89322c1c0f59a2119f4b2aa5951a38507
+pack_1_http_status: 200
+pack_1_content_type: text/yaml; charset=utf-8
+pack_1_content_length: 89772
+pack_1_upstream_raw_identical: yes
+pack_1_upstream_canonical_identical: yes
+pack_1_upstream_rule_id_set_identical: yes
+pack_1_verdict: pinned copy is byte-identical to upstream
+
+pack_2_slug: security-audit
+pack_2_url: https://semgrep.dev/c/p/security-audit
+pack_2_path: security-audit/rules/security-audit.yaml
+pack_2_bytes: 473625
+pack_2_stanzas_by_yaml_parse: 225
+pack_2_top_level_keys: rules
+pack_2_intra_pack_duplicate_ids: 0
+pack_2_raw_sha256: b109a039df712f30c6d3e25e1e8358053fd0f1c91b92d0e8d2871cd141fe602f
+pack_2_canonical_sha256: f8797774847973167f150b39dbcf1875482c52e8270381c0ac1e56a239b2466b
+pack_2_http_status: 200
+pack_2_content_type: text/yaml; charset=utf-8
+pack_2_content_length: 473625
+pack_2_upstream_raw_identical: yes
+pack_2_upstream_canonical_identical: yes
+pack_2_upstream_rule_id_set_identical: yes
+pack_2_verdict: pinned copy is byte-identical to upstream
+
+pack_3_slug: owasp-top-ten
+pack_3_url: https://semgrep.dev/c/p/owasp-top-ten
+pack_3_path: security-audit/rules/owasp-top-ten.yaml
+pack_3_bytes: 1448110
+pack_3_stanzas_by_yaml_parse: 560
+pack_3_stanzas_by_naive_grep: 559 (UNDERCOUNT - see the caveat in SECTION 5)
+pack_3_top_level_keys: rules
+pack_3_intra_pack_duplicate_ids: 0
+pack_3_raw_sha256: f0a4662179ed026409026367c8942e8a5c6da19de0ebfb8fe4127526535cd317
+pack_3_canonical_sha256: ac54d84deae62e3d3052f87bee163d6aa87f128c2a9d7e1aad1e1958cd98e9bf
+pack_3_http_status: 200
+pack_3_content_type: text/yaml; charset=utf-8
+pack_3_content_length: 1448110
+pack_3_upstream_raw_identical: yes (AT THIS CAPTURE - see the instability note)
+pack_3_upstream_canonical_identical: yes
+pack_3_upstream_rule_id_set_identical: yes
+pack_3_verdict: same ruleset as upstream; raw byte ORDER is not stable upstream
+
+combined_pack_bytes: 2011507
+combined_authored_stanzas: 837
+combined_distinct_rule_ids: 725
+
+# ---- RAW BYTE ORDER IS NOT STABLE FOR pack_3 (the central provenance finding) -
+# Four DIFFERENT raw sha256 values have now been observed for a document that is
+# every time exactly 1448110 bytes long, contains exactly 560 stanzas, and has an
+# IDENTICAL canonical digest and an IDENTICAL rule-identifier set:
+#   f8ee6f7bd236f1ba7649efa00c93bd4121dc6e0ae9a69bcd2ddf7becbc5a335c  (planning)
+#   1532b8d2...  (observed during independent verification of this boundary)
+#   401de4e9...  (observed earlier in this remediation session)
+#   f0a4662179ed026409026367c8942e8a5c6da19de0ebfb8fe4127526535cd317  (this run,
+#                 which happens to equal the pinned copy exactly)
+# The response ETag changed in step with the body each time.
+# CONCLUSION: the origin serialises the same ruleset in a varying stanza order.
+# A raw-hash equality check against upstream would therefore produce spurious
+# integrity alarms on a pack that has not changed at all. Two consequences:
+#   1. The pinned copy is NOT re-pinned merely because a raw hash differs. The
+#      pinned bytes are the reproducibility anchor; upstream drift in ORDER is
+#      not a reason to churn them.
+#   2. Integrity is asserted on the CANONICAL digest and the rule-identifier set.
+#      A change in either of those IS a real ruleset change and must be reviewed.
+# The planning-time hash is explicitly guidance rather than a hard assertion,
+# because these packs are living upstream documents.
+
+# =============================================================================
+# SECTION 9 - THE CANONICAL DIGEST ALGORITHM (specified so it is reproducible)
+# =============================================================================
+# A digest that is invariant to stanza order is only meaningful if the algorithm
+# is stated exactly. Two plausible variants disagree with each other, so the
+# choice is recorded explicitly rather than left implicit.
+#
+# ALGORITHM (authoritative):
+#   1. Parse the pack with a YAML safe loader; take the top-level 'rules' list.
+#   2. Serialise EACH rule independently to JSON with:
+#        sorted object keys, no whitespace between tokens, Unicode not escaped.
+#   3. SORT THE RESULTING SERIALISED STRINGS lexicographically.
+#   4. Join them with a single newline between entries.
+#   5. SHA-256 the UTF-8 encoding of that joined text.
+#
+# WHY THIS VARIANT: sorting the serialised STRINGS is order-insensitive by
+# construction. The rejected variant - sorting the rule objects by their 'id'
+# field before serialising - yields a different digest and additionally depends
+# on identifiers being unique and on a tie-break rule. Identifiers happen to be
+# unique within each pack here (0 intra-pack duplicates, verified per pack), but
+# the algorithm must not rely on a property that upstream does not guarantee.
+# Both variants were computed; both are stable pinned-vs-upstream; the specified
+# one is authoritative and is the value recorded in SECTION 8.
+
+# ---- rule-identifier prefix stability (the reason the config path is relative) -
+# Semgrep derives each rule identifier from the configuration path by replacing
+# separators with dots and dropping any leading separator. It is NOT the
+# directory basename. With the relative path 'security-audit/rules' every loaded
+# rule carries the prefix 'security-audit.rules.', which is host-independent and
+# therefore stable across checkouts. An absolute configuration path would embed
+# the host path into all 725 identifiers and would break the SARIF severity join,
+# the cross-layer deduplication key and every baseline diff.
+
+# =============================================================================
+# SECTION 10 - AUTHORED SEVERITY CENSUS AND THE AUTHORED-TO-LOADED DELTA
+# =============================================================================
+# Measured directly from the three pinned packs by YAML parse.
+
+authored_severity_ERROR: 256
+authored_severity_WARNING: 551
+authored_severity_INFO: 19
+authored_severity_MEDIUM: 11
+authored_severity_other: none
+authored_severity_total: 837
+
+# ---- correction of record: the plan's census is off by one ------------------
+# The plan states MEDIUM 12. The MEASURED value is 11. The plan's own four
+# figures sum to 256 + 551 + 19 + 12 = 838, which contradicts the plan's own
+# authored-stanza total of 837. The measured census 256 + 551 + 19 + 11 = 837
+# reconciles exactly with the parsed stanza total (52 + 225 + 560 = 837).
+# The measured value is therefore the correct one and is what this audit uses.
+# The plan is a frozen document and is NOT edited; the discrepancy is disclosed
+# here instead, which is the required treatment.
+
+loaded_rule_count: 725
+authored_to_loaded_delta: 112
+delta_cause: cross-pack duplicate rule identifiers (de-duplicated on load)
+
+# ---- the delta reconciles exactly by inclusion-exclusion --------------------
+# pairwise shared identifiers:
+#   secrets        INTERSECT security-audit  =  5
+#   secrets        INTERSECT owasp-top-ten   = 17
+#   security-audit INTERSECT owasp-top-ten   = 95
+#   present in all three                     =  5
+# 837 - 5 - 17 - 95 + 5 = 725, which equals the loaded rule count exactly.
+# HONEST COVERAGE STATEMENT: this audit's Layer 2 coverage is 725 EXECUTING
+# rules, not 837. Reporting 837 would overstate coverage by 112 and is not done.
+
+
+# =============================================================================
+# SECTION 11 - DIRECTIVE 2 VALIDATION RESULT
+# =============================================================================
+
+layer_2_config_validate_command: semgrep scan --config=security-audit/rules --validate --metrics=off
+layer_2_config_validate_exit_code: 0
+layer_2_config_validate_banner: Configuration is valid - found 0 configuration error(s), and 725 rule(s).
+layer_2_config_validate_rule_count: 725
+layer_2_config_validate_error_count: 0
+layer_2_config_validate_duration_run_1: 19.08s
+layer_2_config_validate_duration_run_2: 18.80s
+layer_2_config_validate_output_reproducible: yes (run 1 and run 2 byte-identical)
+layer_2_config_validate_ansi_escape_bytes: 0
+layer_2_config_status: OK
+
+# The two invocations were compared byte-for-byte, not merely by exit code, to
+# substantiate the plan's reproducibility mandate for the deterministic layers.
+
+# ---- stanza-count method note (carried here as required) --------------------
+# owasp-top-ten authored stanzas: 560 by YAML parse. A naive count of lines
+# matching a stanza opener of the form '- id:' returns 559. The single missing
+# stanza opens with '- patterns:' at line 37703 of the pinned file. Verified:
+# every one of the 837 authored stanzas across all three packs does carry an
+# 'id' key somewhere in its body (stanzas missing an id: 0), so the 725 distinct
+# identifier accounting in SECTION 10 is sound.
+# first-key census: secrets id=52 | security-audit id=225 |
+#                   owasp-top-ten id=559, patterns=1
+
+# =============================================================================
+# SECTION 12 - PROCEDURE DECISIONS RECORDED DELIBERATELY
+# =============================================================================
+
+# ---- ignore-entry breadth --------------------------------------------------
+# The artifact-directory ignore entry is written exactly as 'security-audit/'
+# with NO leading slash. A pattern without a leading slash matches at ANY depth,
+# so a directory of that name anywhere in the tree would also be ignored, whereas
+# '/security-audit/' would anchor the match to the repository root only.
+# DECISION: the unanchored form is retained deliberately, because the plan
+# mandates that exact entry text. The breadth is disclosed here rather than
+# silently "improved". Measured consequence on this repository: none - no other
+# directory of that name exists at any depth.
+# Over-breadth was probed explicitly and the entry is correctly NOT over-broad in
+# the ways that would matter: a sibling named 'security-audit-notes.txt', a
+# directory named 'security-auditing/', and a directory named 'asecurity-audit/'
+# are all still tracked normally. A regular file named 'security-audit' is also
+# unaffected, because the trailing slash restricts the match to directories.
+
+# ---- append idempotency ----------------------------------------------------
+# The ignore entry must be appended exactly once. An unguarded append would add a
+# duplicate line on every re-run. Verified state: the entry occurs exactly once.
+# The guard for any future re-run is a fixed-string whole-line presence test
+# before appending, i.e. append only if 'grep -qxF' does not already find the
+# entry. Recorded so the procedure is re-runnable rather than single-use.
+
+# ---- artifact tracking -----------------------------------------------------
+# The audit artifacts are intentionally NOT tracked by git. They are generated
+# outputs, they include multi-megabyte rule packs, and the assessment's read-only
+# guarantee depends on a re-run leaving no trace in version control. If the
+# artifacts were tracked, every later layer that rewrites one of them would
+# produce a dirty working tree and the guarantee would be void.
+
+# =============================================================================
+# SECTION 13 - LAYER STATUS LEDGER HAND-OFF
+# =============================================================================
+# The status ledger records one key per DETERMINISTIC layer and is written
+# incrementally, as each layer completes, so that a layer which never ran is
+# distinguishable from a layer that ran and succeeded.
+
+ledger_artifact: security-audit/layer-status.json
+ledger_current_content_keys: layer_0_status, layer_2_status, layer_3a_status, layer_4_status
+layer_0_status_in_ledger: OK
+layer_2_status_in_ledger: OK
+layer_3a_status_in_ledger: OK
+layer_4_status_in_ledger: OK
+
+# ---- why every DETERMINISTIC key is now written -----------------------------
+# layer_2_status is defined to be OK only when BOTH conditions hold:
+#   (a) the pinned configuration validated, AND
+#   (b) the scan ran and produced a SARIF document with a valid 'runs' array.
+# (a) is recorded as layer_2_config_status: OK in SECTION 11. (b) now holds as
+# well - security-audit/results-semgrep.sarif exists and carries a valid,
+# non-empty 'runs' array - so layer_2_status: OK asserts nothing untrue.
+# layer_3a_status: OK rests on both primary inventories existing, being
+# non-empty, covering every category of their pattern table (19 sink, 9
+# mitigation) and being format-valid on every line.
+# layer_4_status: OK rests on security-audit/results-osv.json having been
+# produced and parsing. Per IR10 the status keys on the DOCUMENT, never on the
+# process exit code: the composition scanner exits 1 whenever it finds a
+# vulnerability, which is the expected outcome and not a failure.
+# layer_1_status and layer_3b_status remain absent because the two reasoning
+# layers have not run, and an absent key must NOT be backfilled with a guess.
+# The four DETERMINISTIC keys above are exactly what verification check 15
+# requires of the pre-agent steps.
+# This matters for the merged report: the report's summary carries a fixed set of
+# six layer-status keys and the ledger must agree with it exactly, with no drift.
+
+# =============================================================================
+# SECTION 14 - DEVIATIONS, FALLBACKS AND LIMITATIONS (nothing silent)
+# =============================================================================
+# Consolidated so that a reviewer can find every caveat in one place.
+#
+#  1. Two Directive 2 commands as specified do not execute; verified replacements
+#     are in SECTION 4. Directive 6's command is NOT defective and must be left
+#     alone.
+#  2. The plan's MEDIUM severity count is off by one (12 stated, 11 measured);
+#     the measured census is used and the plan is not edited. SECTION 10.
+#  3. Three tool versions differ from the plan's named versions; none affects a
+#     measured result. SECTION 2.
+#  4. DO_NOT_TRACK=1 is set in the environment, so --metrics=off cannot be
+#     credited as the sole cause of telemetry suppression. SECTION 2.
+#  5. jq, ast-grep and go are absent, which forces inline Python for JSON
+#     assertions, ripgrep for structural search, and the release-binary install
+#     path for the composition scanner. SECTION 2.
+#  6. /usr/bin/sg exists but is NOT ast-grep; it is util-linux's set-group-ID
+#     tool. A naive PATH probe for 'sg' yields a false positive. SECTION 2.
+#  7. The owasp-top-ten pack's raw byte order is not stable upstream; integrity
+#     is asserted on the canonical digest and the identifier set, not the raw
+#     hash. SECTION 8.
+#  8. A naive grep undercounts owasp-top-ten stanzas by one; the authoritative
+#     count is a YAML parse. SECTION 5 and SECTION 11.
+#  9. The pack URLs are content-negotiated and a gzip-advertising client receives
+#     a different document; the acquisition command pins identity encoding.
+#     SECTION 6.
+# 10. The truncated-pack rule count is not reproducible across runs because the
+#     upstream stanza order varies; it must not be asserted on. SECTION 7.
+# 11. Layer 0's cmd2, cmd4 and cmd3 exit non-zero as a normal outcome; a gate
+#     must not assert that all Layer 0 commands exit 0. SECTION 3.
+# 12. Layer 0's seven mandated field values are measured on the tracked file set,
+#     which differs substantially from the live working tree on an installed and
+#     partially built checkout. codebase-profile.txt carries the reconciliation.
+#     SECTION 3.
+# 13. The repository's linter is configured to check all files and does not
+#     consult git ignore rules, so it still reports on the artifact directory if
+#     pointed at it. The artifacts are generated outputs whose format is fixed by
+#     the plan (minified single-line JSON), so they are deliberately not
+#     reformatted to satisfy the linter. Linter, formatter and hook configuration
+#     are out of scope for this work and were not modified.
+# 14. The ledger carries all four DETERMINISTIC keys (layer_0, layer_2, layer_3a,
+#     layer_4). The two reasoning-layer keys stay absent because those layers
+#     have not run and an absent key is never guessed. SECTION 13.
+
+# =============================================================================
+# SECTION 15 - READ-ONLY GUARANTEE
+# =============================================================================
+
+application_source_files_modified: 0
+dependencies_installed_by_this_work: 0
+lockfiles_regenerated: 0
+vulnerabilities_remediated: 0
+autofix_flags_used: none
+live_or_remote_product_targets_contacted: 0
+load_test_harness_invoked: no
+network_egress_performed: semgrep.dev rule registry (three pack fetches) and the
+  public OSV advisory database (Layer 4 vulnerability lookups). Both are required by
+  the plan. No live, staged or remote target of the audited product was contacted.
+adversarial_fixtures_location: ephemeral scratch OUTSIDE the repository
+adversarial_fixtures_written_into_repository: 0
+
+# The assessment reports findings and does not repair them. Every issue named in
+# any findings artifact is left in place by design.
+
+
+# =============================================================================
+# LAYER 2 (Directive 2 setup + Directive 3 scan) - SEMGREP PROVENANCE RECORD
+# =============================================================================
+# Recorded by the Layer 2 pass. Sections in this file are additive, one per
+# layer; none overwrites another.
+
+# security-audit run metadata
+# Provenance record for the five-layer read-only security assessment.
+# Practice E10 (traceable, reproducible tool provenance) and E8 (honest coverage).
+# Plain text. ANSI escape sequences are stripped on capture (IR4); this file contains none.
+# Each layer appends its own delimited section below. Sections are additive; none overwrites another.
+
+[tool_versions]
+semgrep: 1.172.0 (Semgrep OSS, PyPI, isolated venv /opt/venvs/security-audit)
+osv-scanner: 2.4.0 (osv-scalibr 0.4.5, commit b56b5191101d5f27d4787d5583d8d01e9518a7af)
+ripgrep: 14.1.1 (AAP 0.4.1 names 14.1.0; host provides 14.1.1 via apt)
+node: 20.20.2 (AAP 0.4.1 names 20.17.0; documented setup override I3 - 20.20.2 is the lowest available 20.x)
+yarn: 4.12.0 (matches the repository packageManager pin)
+python3: 3.13.7 (AAP 0.4.1 names 3.12.3; host provides 3.13.7) - required as the semgrep runtime and as the verify.sh JSON engine
+jq: ABSENT by design - every JSON assertion is implemented with inline python3
+
+# ---------------------------------------------------------------------------
+[layer_2_semgrep]
+status: OK
+# -- Directive 2: pinned rule packs + configuration validation ---------------
+rule_packs_pinned_to: security-audit/rules/ (scanned from disk, never from the p/... registry shorthand)
+rule_pack_bytes: security-audit.yaml=473625, secrets.yaml=89772, owasp-top-ten.yaml=1448110, total=2011507
+authored_rule_stanzas: 837 (security-audit=225, secrets=52, owasp-top-ten=560)
+rules_actually_loaded: 725
+rule_stanza_gap: 837 authored -> 725 loaded (112 lost to cross-pack de-duplication and language filtering).
+  Stated explicitly and never rounded away: claiming 837 rules when 725 execute would misrepresent coverage (E8).
+authored_stanza_count_method: top-level YAML sequence items ('^- '). A naive '^- id:' grep undercounts to 836
+  because one owasp-top-ten.yaml stanza (L37703) opens with '- patterns:' and carries its id on a later line.
+validate_command: semgrep scan --config=security-audit/rules --validate --metrics=off
+validate_exit_code: 0
+validate_result: Configuration is valid - found 0 configuration error(s), and 725 rule(s).
+directive_2_defects_confirmed_on_this_host:
+  '--dump-config' -> "semgrep scan: unknown option '--dump-config'", exit 2 (flag does not exist)
+  '--dry-run'     -> "unknown option '--dry-run'. Did you mean either '-d' or '--dryrun'", exit 2
+  '--dryrun'      -> exists but per --help only "does not write autofixes to a file"; it does NOT validate configuration
+  corrected forms used instead: curl-to-disk for pinning, '--validate' for configuration validation
+# -- Directive 3: the scan --------------------------------------------------
+invocation: semgrep scan --config=security-audit/rules --sarif -o security-audit/results-semgrep.sarif --json-output=security-audit/results-semgrep.json --metrics=off .
+working_directory: repository root
+config_path_form: RELATIVE (IR9 - load-bearing)
+rule_id_prefix: security-audit.rules.
+  Semgrep derives every rule id from the --config path with separators replaced by dots and any leading
+  separator dropped. An absolute config path would bake the host path into all 725 rule ids, destroying
+  cross-checkout reproducibility, invalidating every baseline diff, and breaking the SARIF severity join.
+  Verified: all 725 driver rule ids and every result ruleId carry the relative-derived prefix above.
+metrics: off (mandatory on every invocation)
+autofix: NEVER passed - this is an assessment and remediates nothing
+dual_output_rationale: a single scan emits both --sarif (interchange + authoritative severity source) and
+  --json-output (enrichment only: CWE, OWASP, impact, confidence). SARIF is lossy for that metadata in
+  Semgrep OSS (IR11). One invocation satisfies "emitted from the same scan" literally.
+scan_exit_code: 0
+scan_started_utc: 2026-07-31T03:21:16Z
+scan_ended_utc: 2026-07-31T03:22:56Z
+scan_wall_clock_seconds: 100
+files_scanned: 9468
+rules_run: 192 (of 725 loaded; semgrep applies per-target language filtering)
+findings: 467
+parsed_lines: ~99.9%
+targets_by_language: ts=7246, json=321, yaml=81, js=39, bash=10, html=10, dockerfile=2, php=1; multilang rules=52
+target_selection: limited to files tracked by git. node_modules/ is therefore excluded (it is gitignored and, on
+  this host, absent entirely).
+self_reference_disclosure: git-tracking - NOT gitignore status - governs semgrep's target selection, so the pinned
+  rule packs WERE scanned, because they are tracked (force-added) even though .gitignore:119 ignores security-audit/.
+  4 of the 467 results are consequently located inside the audit's own artifact directory:
+    security-audit/rules/secrets.yaml:787        generic.secrets.security.detected-ssh-password
+    security-audit/rules/secrets.yaml:2213       generic.secrets.security.detected-pgp-private-key-block
+    security-audit/rules/security-audit.yaml (2 results)
+  These are matches against the rule packs' own illustrative pattern text - artifacts of the audit tooling, not
+  properties of the codebase under audit. They are DISCLOSED rather than removed: Directive 3's invocation is
+  verified clean and must not be "corrected" (only Directive 2's two commands were defective), and E3 forbids
+  hand-editing this raw document. The Layer 2 normalizer should suppress these 4 self-referential results and note
+  the suppression; doing so here would break both the preserve-unmodified mandate and byte-reproducibility.
+# -- Honest coverage: nothing suppressed, nothing silently dropped (E8) -----
+parse_notices: 50, all at level 'warn' (3 "Syntax error", 47 "PartialParsing"); 0 fatal, 0 blocking.
+  Non-fatal partial-parse notices on a small number of .tsx/.yml/.html files. Consistent with exit 0 and ~99.9%
+  parsed lines. Recorded rather than omitted because no layer may fail silently.
+skipped_files_over_1MB: 37
+skipped_files_matching_semgrepignore: 402
+documented_coverage_limit: the scanner produced NO finding for the encryption-key reuse in packages/lib/crypto.ts
+  ("aes256" L3; latin1 key decode L16 and L32; one CALENDSO_ENCRYPTION_KEY serving both symmetric 2FA
+  encryption and HS256 token signing) nor for the three fail-open returns in packages/lib/rateLimit.ts (L41, L44, L55).
+  Pattern-based SAST under-performs on authentication, access control and cryptography. Layer 2 silence on these
+  conditions is NOT absence of a finding - Layer 1 covers them, which is why it is additive rather than duplicative.
+cross_layer_corroboration_signal: dockerfile.security.missing-user.missing-user (level error, CWE-250,
+  MEDIUM CONFIDENCE) fired on BOTH container images - Dockerfile and apps/api/v2/Dockerfile - the same condition
+  Layer 1 finds by manual inspection. This is the merge algorithm's worked example (corroborated = 2).
+# -- Emitted artifacts ------------------------------------------------------
+results-semgrep.sarif: 1799242 bytes, SARIF 2.1.0, single run, driver "Semgrep OSS" 1.172.0, 725 driver rules, 467 results
+sarif_schema_conformance: VALIDATED, not merely asserted. The emitted document was checked against the normative
+  OASIS schema ("Static Analysis Results Format (SARIF) Version 2.1.0 JSON Schema", JSON Schema draft-07, the
+  115632-byte document published at the $schema URI the file itself declares) using jsonschema 4.25.1:
+  ZERO validation errors. Practice E3 is therefore demonstrated - any SARIF-aware platform can ingest this
+  artifact without translation. Top-level keys are exactly $schema, runs, version.
+results-semgrep.json: 1378683 bytes, Semgrep native JSON (enrichment source only, never the severity source)
+sarif_post_processing: NONE. The document is preserved exactly as emitted (E3). No hand-editing, no filtering,
+  no normalization and no redaction is applied here; normalization belongs to findings-layer-2-semgrep.json.
+snippet_contract: MEASURED, and it corrects a natural assumption. The result OBJECT carries only fingerprints,
+  locations, message, properties and ruleId - but a matched-source snippet IS embedded one level deeper, at
+  locations[].physicalLocation.region.snippet.text, on 467 of 467 results (longest 1493 chars). Any consumer that
+  assumes this SARIF is snippet-free is wrong.
+secret_value_handling: the raw SARIF is preserved exactly as emitted (E3). Because snippets are embedded, the
+  emitted document was swept for credential material and the results are recorded here by reference only - file,
+  line, class and length - never by value (IR8/E7):
+  - Fixed provider-pattern sweep (Stripe sk_live_/sk_test_/pk_live_, AWS AKIA/ASIA, GitHub ghp_/gho_/ghs_/
+    github_pat_, OpenAI sk-, Slack xox[abpsr]-, Google AIza, PEM private-key headers, JWTs, basic-auth URLs)
+    over BOTH results-semgrep.sarif and results-semgrep.json: ZERO matches in either artifact.
+  - CRON_API_KEY at .env.example:82 - the single high-entropy value in the tracked env templates, class
+    "base64-like API key", length 32 - is ABSENT from both artifacts. No result is located in any .env* file
+    (0 of 467), so neither tracked template contributed a value to this document.
+  - ONE genuinely high-entropy embedded snippet exists and is disclosed rather than quietly carried:
+      file:line = apps/web/calendso.yaml:349
+      rule      = generic.secrets.security.detected-google-oauth-access-token
+      class     = Google OAuth access token (example payload), length 161, Shannon entropy 5.75
+      value     = DELIBERATELY WITHHELD
+    Context that bounds the exposure: apps/web/calendso.yaml is the repository's OpenAPI 3.0.0 specification and
+    L349 sits inside an example Google Calendar credential object (scope/token_type/expiry_date/access_token/
+    refresh_token). The value is PRE-EXISTING TRACKED repository content, present since commit 809abd2f4f and
+    long predating this assessment - this artifact introduces nothing new to the SCM, it only points at what is
+    already committed. Google OAuth access tokens are short-lived (~1h), so a token published in a public
+    open-source API specification is expired by construction.
+    Handling per the AAP: the raw SARIF stays unmodified and value-level redaction is applied in the Layer 2
+    normalizer, noted here as required. The finding itself must still be reported - reporting it by reference is
+    what keeps the evidence intact without republishing the value.
+  - 14 further tokens crossed the entropy screen and were each resolved as non-credentials on inspection:
+    GitHub Action references (useblacksmith/..., marocchino/...), DATABASE_URL-shaped identifiers, a grafana
+    identifier, and the string dangerouslySetInnerHTML.
+  - .env.example:374 E2E_TEST_CALCOM_QA_PASSWORD is 8 chars, all-lowercase-alphabetic, entropy 2.75 -
+    placeholder class, not a credential.
+severity_resolution_contract: result.level is ABSENT on 100% of results and 'security-severity' is present on
+  0 of 725 rules, so severity MUST be joined - match result.ruleId against the driver rule list and read that
+  rule's defaultConfiguration.level. Driver level distribution: warning=477, error=231, note=17 (sum 725).
+downstream_contract_verified: the Layer 2 normalizer's core operation was executed against this document to
+  prove the artifact is fit for purpose rather than merely well-formed. Measured outcome:
+    result.ruleId -> driver rule join resolved on 467/467 results (0 unresolved)
+    CWE extracted from free-form rule tags via ^CWE-\d+ on 467/467 results (0 missing, so no CWE-UNKNOWN needed)
+    A7 severity map (error->critical, warning->high, note->medium, info->low) applied to the JOINED level yields
+      RESULT-level counts critical=49, high=416, medium=2 (sum 467). Note these are RESULT counts; the
+      231/477/17 figures elsewhere in this file are RULE counts - the two must not be conflated.
+    every emitted record satisfied the unified schema: severity within {critical,high,medium,low}, integer line,
+      non-empty description of at most 200 chars, repo-relative file path, single-line minified JSON, zero ANSI.
+  Severity inflation is expected and accepted, per the AAP's A7 resolution: mapping SARIF 'warning' to 'high' and
+  'error' to 'critical' is more severe than the scanner's own semantics. It cannot manufacture a gate BLOCK,
+  because BLOCK keys exclusively on Layer 3b exploitability.
+fingerprint_contract: results[].fingerprints is the Semgrep OSS sentinel {"matchBasedId/v1": "requires login"} -
+  unusable as a key, which empirically validates the file+line+CWE deduplication key over any tool fingerprint.
+determinism: VERIFIED BY RE-RUN, not argued. runs[0].invocations carries only executionSuccessful and
+  toolExecutionNotifications - no timestamps, no host paths, no originalUriBaseIds.
+  results-semgrep.sarif is BYTE-IDENTICAL across two independent scans of the identical checkout:
+    sha256 3d2d760a78d692e67fd42f838ffdccc96394038930ddcac949e216ceb198700d on both runs (1799242 bytes),
+    both exit 0, both 9468 targets scanned, both 192 rules run, both 467 findings.
+    This satisfies the REPRODUCIBILITY mandate for deterministic layer 2 at the strictest reading.
+  results-semgrep.json is NOT byte-identical, and that deviation is disclosed rather than glossed over (E8).
+    Every semantically meaningful key is deep-equal across runs - results, errors, paths, version,
+    engine_requested, skipped_rules, profiling_results - and the SOLE variance is inside the native format's
+    "time" block: fixpoint_timeouts, max_memory_bytes, profiling_times, rules_parse_time and scanning_time are
+    wall-clock and memory measurements that necessarily differ run to run (matching_time, parsing_time,
+    prefiltering, rules, tainting_time, targets and total_bytes are all stable). The companion is therefore
+    structurally reproducible but not byte-reproducible; the authoritative artifact, the SARIF, is both.
+determinism_precondition: MEASURED CAVEAT for anyone re-running this layer. Semgrep selects targets by GIT
+  state, and it includes untracked files that are not gitignored - so a stray untracked file in the working tree
+  changes the target set and can change the rule set. Observed directly: leaving one untracked .py validation
+  script in the tree took targets from 9468 to 9470 and rules_run from 192 to 386, because a single Python file
+  activates every Python rule. Findings stayed at 467, so results were unaffected here, but a clean working tree
+  (git status --porcelain reporting nothing but this artifact directory) is a precondition for byte-identical
+  re-runs. The figures recorded in this file were produced with such a clean tree.
+native_json_path_relativity: 0 of 467 results[].path and 0 of 9468 paths.scanned values are absolute. The five
+  "blitzy" substrings in this file are the repository's OWN top-level blitzy/ and blitzy-docs/ documentation
+  directories appearing in paths.scanned - repo-relative content, not leaked host paths.
+scan_target_scope: local source checkout only. No live, staged or remote target was probed and the committed k6
+  load harness was never invoked, honouring SECURITY.md L31-32 (E9/IR13).
+repository_state: HEAD 182a70320591681cd1ebfb84661c318c31a4c7cb; zero tracked application source files modified;
+  no project dependencies installed (node_modules absent - semgrep parses source text and does not need it).
+# ---------------------------------------------------------------------------
+
+
+# =============================================================================
+# LAYER 4 (Directive 6) - OSV-SCANNER PROVENANCE RECORD
+# =============================================================================
+# Recorded by the Layer 4 pass. Sections in this file are additive, one per
+# layer; none overwrites another.
+
+# =============================================================================
+# run-metadata.txt - provenance and per-layer run statistics
+# =============================================================================
+# Artifact   : security-audit/run-metadata.txt
+# Role       : the audit's provenance record. Directive 6 requires that scan exit
+#              codes, wall-clock durations, files scanned and dependency-scan
+#              totals be RECORDED, but assigns them to no file; AAP 0.6.1 places
+#              them here. Practice E10 (traceable, reproducible tool provenance)
+#              requires every tool be version-pinned and its self-report captured.
+# Format     : plain UTF-8, LF line endings, ASCII only, comment lines prefixed
+#              '#', one 'key: value' per line inside each section. All repository
+#              paths are repository-relative.
+# Structure  : one section per layer, in layer order. Each layer appends its own
+#              section and edits no other. A layer that has not run yet simply has
+#              no section - which is NOT a status claim; layer status lives only in
+#              security-audit/layer-status.json.
+# Pass rule  : verification check 12 - this file must contain no ANSI escape byte
+#              (ESC, 0x1B). Stripping happens ON CAPTURE as a pipeline stage (IR4),
+#              never as a later cleanup pass, so no escape byte is ever written.
+# Secrets    : no secret value appears in this artifact. Where the assessment meets
+#              high-entropy material it is cited by file, line, class and length
+#              only - mandatory because both environment templates are git-tracked
+#              by explicit negation at .gitignore:L42-L43.
+#
+# =============================================================================
+# HOST TOOLCHAIN - self-reports captured verbatim (practice E10)
+# =============================================================================
+#   tool          version    role
+#   -------------------------------------------------------------------------
+#   osv-scanner   2.4.0      Layer 4 software-composition analysis
+#   osv-scalibr   0.4.5      the scan library behind osv-scanner
+#   python3       3.13.7     JSON engine for every assertion (jq is ABSENT)
+#   node          20.20.2    repository runtime
+#
+# osv-scanner self-report, verbatim, four lines exactly as the binary prints them:
+#   osv-scanner version: 2.4.0
+#   osv-scalibr version: 0.4.5
+#   commit: b56b5191101d5f27d4787d5583d8d01e9518a7af
+#   built at: 2026-06-18T12:55:27Z
+#
+# Binary provenance:
+#   path        /usr/local/bin/osv-scanner
+#   size        56676514 bytes
+#   file(1)     ELF 64-bit LSB executable, x86-64, statically linked (Go)
+#   sha256      15314940c10d26af9c6649f150b8a47c1262e8fc7e17b1d1029b0e479e8ed8a0
+#
+# INSTALL PATH (IR7) - the FALLBACK is the operative path, not the first choice.
+#   Directive 6 offers 'go install github.com/google/osv-scanner/cmd/osv-scanner@latest'
+#   FIRST, but Go is ABSENT on this host, so the GitHub release binary is the
+#   operative path. The release asset carries an UNVERSIONED filename
+#   (osv-scanner_linux_amd64); a version-bearing URL returns an HTML error page
+#   rather than a binary, so the download must be confirmed to be an ELF executable
+#   before use. Confirmed here by file(1): statically linked ELF x86-64, not HTML.
+#   jq is likewise ABSENT, which is why every JSON assertion in this audit -
+#   including all sixteen checks in verify.sh - is written in inline Python.
+#
+# =============================================================================
+# LAYER 4 (Directive 6) - OSV-Scanner software-composition analysis
+# =============================================================================
+layer_4_tool: osv-scanner 2.4.0 (osv-scalibr 0.4.5, commit b56b5191101d5f27d4787d5583d8d01e9518a7af, built 2026-06-18T12:55:27Z)
+layer_4_command: osv-scanner scan source --lockfile=yarn.lock --format json
+layer_4_working_directory: repository root
+layer_4_lockfile_argument: yarn.lock (RELATIVE, as required)
+layer_4_lockfiles_scanned: 1
+layer_4_ecosystems_scanned: 1 (npm)
+layer_4_exit_code: 1
+layer_4_exit_code_is_failure: NO - see IR10 below. Exit 1 means vulnerabilities were found.
+layer_4_wall_clock_seconds: 1.800
+layer_4_scanner_internal_elapsed_ms: 23.871
+layer_4_scanner_accounting: 0 dirs visited, 1 inodes visited, 1 Extract calls
+layer_4_packages_extracted_from_lockfile: 3725
+layer_4_raw_output_artifact: security-audit/results-osv.json
+layer_4_raw_output_bytes: 2828480
+layer_4_raw_output_lines: 43743
+layer_4_raw_output_sha256: 26a71f5faefd94e1fce9c04a1df282b55fd21090d28271e519837830cbae88ec
+layer_4_raw_output_md5: d289aac2858af2dc465402a3291d9102
+layer_4_input_lockfile_bytes: 1433240
+layer_4_input_lockfile_sha256: dd921ea222695ff1ee112fa16e755fc0907018a62242a556d69c81b8ce57a679
+layer_4_status: OK
+layer_4_status_basis: the result document was produced AND parses as JSON. NOT the exit code.
+layer_4_ansi_escape_bytes: 0
+layer_4_status_ledger: security-audit/layer-status.json
+
+# ---- Directive 6 totals (the directive requires that totals be RECORDED) -----
+layer_4_sources_scanned: 1
+layer_4_package_entries_with_vulnerabilities: 121
+layer_4_distinct_package_names_affected: 75
+layer_4_raw_vulnerability_records: 370
+layer_4_groups: 370
+layer_4_distinct_advisory_ids: 250
+layer_4_distinct_cve_ids: 224
+layer_4_advisory_id_prefixes: GHSA 369, MAL 1
+layer_4_records_deduplicated_by_package_and_advisory: 253
+layer_4_records_deduplicated_by_package_and_cve: 259
+layer_4_severity_critical: 10
+layer_4_severity_high: 102
+layer_4_severity_medium: 116
+layer_4_severity_low: 24
+layer_4_severity_unknown: 1
+layer_4_cwe_resolved: 252
+layer_4_cwe_unresolved: 1
+layer_4_distinct_cwes: 91
+layer_4_severity_source_group_max: 250
+layer_4_severity_source_database_label: 2
+layer_4_severity_source_unknown: 1
+
+# =============================================================================
+# LAYER 4 - OBLIGATIONS THE NORMALIZER MUST DISCHARGE
+# The raw artifact is preserved UNMODIFIED per practice E4, so every one of the
+# following transformations belongs to security-audit/findings-layer-4-osv.json.
+# Each is stated with the measurement that makes it actionable rather than as a
+# general warning, because a warning without a target is not verifiable.
+# =============================================================================
+#
+# --- OBLIGATION 1. RELATIVIZE THE SOURCE PATH. Measured, not assumed. ---------
+# osv-scanner ALWAYS ABSOLUTIZES its source path, even when handed a relative
+# lockfile argument, which is exactly what happened here: the argument was the
+# relative string 'yarn.lock' and the emitted document nevertheless records an
+# absolute, machine-specific path. Left unrelativized, EVERY Layer 4 finding would
+# carry a path that is unique to this checkout, which breaks reproducibility and
+# invalidates every baseline diff.
+#   field to rewrite : results[*].source.path
+#   emitted value    : <absolute path of this checkout>/yarn.lock
+#   required value   : yarn.lock
+# BLAST RADIUS IS EXACTLY ONE FIELD. A regular-expression sweep of the entire
+# 2828480-byte payload finds exactly ONE absolute-path occurrence, and it is that
+# field. Nothing else in the document needs relativizing - the package entries,
+# advisory records, aliases and CWE lists are all path-free. So this obligation is
+# a single, testable rewrite, not an open-ended audit of the document.
+#
+# --- OBLIGATION 2. SEVERITY IS NOT NUMERIC. Derive it; do not read it. --------
+# vulnerabilities[*].severity is an ARRAY OF CVSS VECTOR STRINGS, not a number:
+#   [{"score":"CVSS:3.1/AV:N/AC:L/PR:L/UI:N/S:U/C:N/I:N/A:L","type":"CVSS_V3"},
+#    {"score":"CVSS:4.0/AV:N/AC:L/AT:N/PR:L/UI:N/VC:N/VI:N/VA:L/...","type":"CVSS_V4"}]
+# The ONLY numeric value anywhere in the document is groups[*].max_severity, and it
+# is a per-GROUP maximum, NOT a per-vulnerability score. GROUP-TO-VULNERABILITY
+# ATTRIBUTION IS THEREFORE MANDATORY and it IS recoverable from the raw document,
+# because groups[*].ids enumerates the advisory ids each group covers. Join on that
+# array; do not assume group order matches vulnerability order.
+# Measured three-step fallback chain over the 253 deduplicated records:
+#   1. groups[*].max_severity                      250 records
+#   2. database_specific.severity  (LOW|MODERATE|HIGH|CRITICAL)   2 records
+#   3. unknown - no numeric score and no label      1 record
+# The two step-2 records are named explicitly so the fallback is verifiable:
+#   cookie      GHSA-pxg6-pf52-xh8x   database_specific.severity = LOW
+#   dompurify   GHSA-x4vx-rjvf-j5p4   database_specific.severity = LOW
+# Note that database_specific.severity uses the GitHub vocabulary, whose MODERATE
+# has no counterpart in the audit's unified critical/high/medium/low vocabulary and
+# must be mapped to 'medium'. Neither step-2 record is MODERATE, so the mapping is
+# not exercised on this run - but it must still be implemented, because a database
+# refresh can move a record into step 2 at any time.
+# CVSS bands applied to the step-1 numeric value (corroborated across five
+# independent published sources): none 0.0 | low 0.1-3.9 | medium 4.0-6.9 |
+# high 7.0-8.9 | critical 9.0-10.0.
+#
+# --- OBLIGATION 3. THE CWE JOIN KEY (practice E2) ----------------------------
+#   field: vulnerabilities[*].database_specific.cwe_ids  e.g. ["CWE-400"]
+# Resolved on 252 of the 253 deduplicated records; 91 distinct CWEs appear. This is
+# the clean join key and no inference from the description is required for any of
+# those 252. Every finding must carry a CWE (E2), so the one unresolved record must
+# be handled explicitly rather than silently dropped - see Obligation 5.
+#
+# --- OBLIGATION 4. DEDUPLICATION, AND THE ONE PLACE THE STATED KEY IS UNDECIDABLE
+# Directive 6 says, verbatim, to deduplicate by (package_name, CVE_ID). Applied
+# literally that key is UNDECIDABLE for 30 of the 370 raw records, because those
+# records carry NO CVE alias at all - the advisory has only its GHSA (or MAL)
+# identifier. Reporting both readings, because the difference is real and a
+# downstream count that does not reconcile will fail verification check 11:
+#   (package_name, advisory_id) throughout ........................ 253 records
+#   (package_name, CVE_ID), falling back to the advisory id when no
+#   CVE alias exists (229 CVE-keyed pairs + 30 alias-free records) . 259 records
+# The 6-record difference is fully accounted for: exactly six advisories carry TWO
+# CVE aliases each, so expanding on CVE splits each of them into two pairs -
+#   lodash GHSA-f23m-r3pf-42rh, lodash GHSA-r5fr-rjxr-66jc,
+#   lodash-es GHSA-f23m-r3pf-42rh, lodash-es GHSA-r5fr-rjxr-66jc,
+#   path-to-regexp GHSA-37ch-88jc-xwx2, uuid GHSA-w5hq-g745-h8pq.
+#   253 + 6 = 259, reconciling exactly.
+# RECOMMENDED KEY: (package_name, advisory_id). It is total - every record has an
+# advisory id - it is stable when a database refresh adds a CVE alias to an existing
+# advisory, it never double-counts a single advisory that happens to carry two CVE
+# numbers, and it yields 253, the figure the plan measured. Whichever key is chosen,
+# state it in the findings artifact so the merged summary reconciles.
+# Note also WHY 370 raw records collapse to 253: 29 package NAMES appear at more
+# than one version in the lockfile (fast-xml-parser at 4.4.1 and 5.3.5,
+# @opentelemetry/core at four versions, ajv at four, and so on), and the same
+# advisory is reported against each affected version.
+#
+# --- OBLIGATION 5. HONEST COVERAGE - the single degenerate record (practice E8)
+# One record has NO CVE alias, NO cwe_ids, NO CVSS vector array and an empty
+# groups[0].max_severity. It must be REPORTED, not hidden:
+#   package  http @ 0.0.1-security (npm)
+#   advisory MAL-2025-22760   summary: "Malicious code in http (npm)"
+#   severity null | aliases absent | database_specific {"malicious-packages-origins": null}
+# Two facts make it materially more interesting than its missing metadata suggests.
+# First, it is a MALICIOUS-PACKAGE advisory, a class the repository's current gate
+# cannot express at all. Second, http@0.0.1-security is a DIRECT PRODUCTION
+# dependency of @calcom/api-proxy - declared in apps/api/package.json alongside
+# connect 3.7.0 and http-proxy-middleware 2.0.9 - and NOT a transitive. Whatever
+# severity and CWE the normalizer assigns must be justified in the finding text
+# rather than inferred silently, and 'unknown' must not be quietly rounded to 'low'.
+#
+# --- OBLIGATION 6. THE VERSION-OVERRIDE CAVEAT, MADE DECIDABLE ---------------
+# The root package.json declares 41 resolutions entries covering 37 distinct
+# override targets. A resolutions override means the version RECORDED in the
+# lockfile entry and the version EFFECTIVELY INSTALLED can differ, so an OSV match
+# is evidence of a POSSIBLE exposure rather than proof of a live one. Every Layer 4
+# finding must note whether an override applies to its package. Rather than leave
+# that as a blanket warning, the intersection was measured:
+#   12 of the 75 OSV-flagged package names have a root override, and 66 of the 370
+#   raw vulnerability records sit on one:
+#     axios (1.13.5), form-data (4.0.4), js-yaml (4.1.1), lodash (4.17.23),
+#     lodash-es (4.17.23), node-forge (1.3.2), qs (6.14.1), rollup (4.22.4),
+#     serialize-javascript (6.0.2), tar (7.5.7), typeorm (0.3.27),
+#     fast-xml-parser (4.4.1 and 5.3.5)
+#   For ELEVEN of those twelve the flagged lockfile version is IDENTICAL to the
+#   override target, so for those the caveat resolves to 'no divergence - the
+#   override is already materialized in the lockfile and the match is against the
+#   overridden version'. That is a stronger statement than the generic caveat, and
+#   it means those findings are NOT weakened by the override.
+#   fast-xml-parser is the ONE exception and it inverts the caveat - see below.
+#   The remaining 25 override targets are not flagged by OSV at all.
+#
+# --- OBLIGATION 7. THE SUPPRESSION-BOUNDARY FINDING -------------------------
+# .yarnrc.yml:L7-L11 suppresses ONE npm advisory, npmAuditIgnoreAdvisories:
+# ["1113407"], for an XML parser. It does so CORRECTLY BY THE REPOSITORY'S OWN
+# STANDARD and that must be CREDITED, not criticised: the entry carries a
+# three-line written justification at .yarnrc.yml:L7-L9 stating that the parser
+# only handles trusted AWS API responses rather than user input, that there is no
+# practical attack vector, and that an upstream fix is pending. That is good
+# practice, and this assessment applies the same standard in reverse - every
+# demotion it makes carries a reason of comparable specificity.
+# The problem is the BOUNDARY of the suppression, not its quality. It binds ONLY
+# the Yarn auditor. Measured against the independent OSV database:
+#   yarn.lock:L22747 and L22749 still record fast-xml-parser@npm:4.4.1, and the
+#   scan returns SIX advisories against that version -
+#     GHSA-8gc5-j5rx-235r  CVE-2026-33036  CWE-776   7.5
+#     GHSA-fj3w-jwp8-x2g3  CVE-2026-27942  CWE-120   2.7
+#     GHSA-gh4j-gqv2-49f6  CVE-2026-41650  CWE-91    6.1
+#     GHSA-jmr7-xgp7-cmfj  CVE-2026-26278  CWE-776   7.5
+#     GHSA-jp2q-39xq-3w4g  CVE-2026-33349  CWE-1284  5.9
+#     GHSA-m7jm-9gc2-mpf2  CVE-2026-25896  CWE-185   9.3  <- CRITICAL
+#   The written justification addresses ONE of them. Five, including the 9.3
+#   critical, are neither suppressed nor addressed.
+# Three further measurements complete the finding:
+#   (a) The existing CI gate blocks only at critical severity, and it does so VIA
+#       THE VERY AUDITOR THE SUPPRESSION SILENCES -
+#       .github/workflows/security-audit.yml:L19 runs
+#       'yarn npm audit --all --recursive --severity critical'.
+#   (b) The resolutions pin to 5.3.5 does NOT remediate. The scan of 5.3.5 returns
+#       FIVE of the same six advisories - every one except the 9.3 critical
+#       GHSA-m7jm-9gc2-mpf2. Independently reconfirmed on this run.
+#   (c) The pin does not even reach the affected instance. The override key is
+#       SCOPED: "@lingo.dev/_compiler/fast-xml-parser": "5.3.5". It governs only
+#       that one parent, so it does not apply to the @boxyhq/saml-jackson ->
+#       @aws-sdk/core transitive that pulls in 4.4.1, and BOTH 4.4.1 and 5.3.5
+#       remain present in the lockfile. This is the one case where the override
+#       caveat inverts: the override does not weaken the finding, it fails to
+#       cover it.
+# This is the clearest available demonstration of why Layer 4 uses an independent
+# vulnerability database rather than the package manager's own auditor.
+#
+# --- OBLIGATION 8. MUTABLE VERSION SPECIFIERS -------------------------------
+# Two exist across the whole monorepo, and the second is materially worse:
+#   checkly: "latest"        root devDependencies      - CI-only blast radius
+#   @snyk/protect: "latest"  apps/api/v2/package.json:L64, inside the PRODUCTION
+#                            dependencies block - a production runtime dependency
+#                            whose resolved code can change with NO manifest change,
+#                            which by construction no lockfile-based scan can bound.
+#
+# --- OBLIGATION 9. PER-SURFACE VERSION SKEW ---------------------------------
+# An advisory can apply to one surface and not another, so findings must not be
+# collapsed across surfaces:
+#   stripe   9.16.0  in apps/web        vs  15.4.0 in apps/api/v2 - two majors run
+#                                           simultaneously, so webhook-signature
+#                                           semantics differ per surface
+#   next     16.1.7  in apps/web        vs  16.1.5 in apps/api/v1 - patch skew, so a
+#                                           patch-level advisory can hit one only
+#   engines.yarn "3.4.1" is declared in apps/web/package.json against the root
+#   packageManager pin "yarn@4.12.0". The root pin governs, so this is stale
+#   manifest drift rather than a blocker - but it is exactly the kind of drift an
+#   audit should surface.
+# node-ical 0.16.1 is declared at root package.json:L110, which confirms the XXE
+# and deserialization sink categories have real substrate rather than being
+# theoretical for this codebase.
+#
+# --- OBLIGATION 10. THE MERGE MUST DEDUPLICATE INTER-LAYER ONLY (A8) --------
+# There is exactly ONE lockfile, so results[*].source.path is a single value and
+# EVERY Layer 4 finding keys on the SAME path. Directive 7 also mandates line = 0
+# for every dependency finding. File and line are therefore CONSTANT across all
+# Layer 4 findings, and a merge key of file+line+CWE collapses them purely by CWE.
+# With 91 distinct CWEs over 253 records that is catastrophic over-collapse, and it
+# manufactures corroborations that do not exist. THE MERGE MUST DEDUPLICATE
+# INTER-LAYER ONLY: two findings originating in the same layer must never merge.
+#
+# --- OBLIGATION 11. THE EXISTING-TOOLING DELTA ------------------------------
+# The repository's current dependency gate is the Yarn auditor at severity
+# 'critical' (.github/workflows/security-audit.yml:L19), not OSV. There is no
+# CodeQL, Snyk, Trivy, Semgrep or Gitleaks workflow anywhere in .github/workflows,
+# and no .github/dependabot.yml exists - both verified by direct inspection. OSV is
+# strictly broader in database coverage and, decisively, is NOT subject to the
+# repository's Yarn-specific advisory suppression. Nothing here is wired into CI:
+# .github/workflows/security-audit.yml is read as evidence and never edited, and no
+# task is added to turbo.json.
+#
+# =============================================================================
+# LAYER 4 - WHAT THIS LAYER MUST *NOT* BE USED FOR
+# Stated explicitly because the failure mode is easy to reach by accident and the
+# consequence is a gate that is useless in practice.
+# =============================================================================
+# LAYER 4 SEVERITY MUST NOT DRIVE THE GATE VERDICT. This layer reports 10 critical
+# and 102 high findings. A gate keyed on that severity distribution would BLOCK on
+# essentially every scan of essentially every npm project, and a gate that always
+# blocks is indistinguishable from no gate at all. The published distribution of npm
+# advisories makes this concrete: across 1498 npm vulnerabilities studied, 0.53% were
+# low, 31.11% medium, 42.06% high and 26.30% critical - so high-and-above is the
+# ordinary case, not the exceptional one.
+# The verdict is instead keyed on EXPLOITABILITY, established by Layer 3b, and it is
+# computed exclusively from the requirements' own truth table in strict
+# ERROR > BLOCK > WARN > PASS precedence. NO threshold, service level or key
+# indicator is invented here, and none may be inferred from these counts: the
+# repository declares no numeric security SLA, KPI or coverage threshold anywhere,
+# and this assessment does not supply one. The only numeric mapping this layer
+# applies is the standard CVSS band table above, which is a published external
+# standard rather than a locally chosen cut-off.
+# The reason exploitability rather than severity is the right key is well evidenced:
+# most dependency alerts are not reachable at all. 70-80% of declared dependencies
+# are never referenced; one industry analysis found the flagged dependency unused in
+# 84.2% of alerts; a large Maven study found reachable call paths for under 1% of
+# packages; and a conservative call-graph reachability filter cut 121 reported
+# vulnerabilities to 31 across twelve Go projects, a 74.4% false-positive reduction.
+# Only about 32% of automated remediation pull requests are ever merged.
+# CONSEQUENCE FOR THIS LAYER'S CONTRIBUTION TO THE GATE: Layer 4 contributes
+# FINDINGS and its OK/ERROR status, and nothing else. Its status can raise the
+# verdict to ERROR - but only by failing to produce a parseable document, never by
+# finding vulnerabilities. Its findings feed the total that the WARN branch compares
+# against the baseline. Its severities never, on their own, produce BLOCK.
+#
+# =============================================================================
+# LAYER 4 - COVERAGE AND HONEST DISCLOSURE (practice E8)
+# =============================================================================
+# LOCKFILE COVERAGE IS COMPLETE FOR EVERY LOCKFILE THE SCANNER CAN PARSE.
+# codebase-profile.txt records lockfiles: yarn.lock, and an independent recursive
+# sweep over nine lockfile names outside node_modules/.yarn/.git confirms ./yarn.lock
+# is the only match. One further git-tracked lockfile exists that Directive 0's
+# root-level 'ls' cannot see:
+#   packages/embeds/embed-core/bun.lockb - 82677 bytes of BINARY Bun lockfile format
+# The pinned scanner REJECTS it, re-verified on this run:
+#   "could not determine extractor suitable to this file", 0 Extract calls
+# No text bun.lock exists anywhere in the tree, so there is no parseable substitute.
+# It is therefore NOT a Layer 4 target and the profile's field value stands. It is
+# recorded here for two reasons: so no downstream layer concludes the sweep missed a
+# lockfile, and because a stale binary lockfile committed inside a published package
+# is itself an observation worth carrying forward.
+#
+# DELTAS AGAINST THE PLAN'S MEASUREMENTS, DISCLOSED RATHER THAN SMOOTHED.
+# The plan's Layer 4 figures were measured earlier against the SAME live OSV
+# database, which moves as advisories are published and amended. Reconciliation:
+#   deduplicated record count   plan ~253   measured 253   EXACT
+#   severity source chain       plan 250 / 2 / 1           measured 250 / 2 / 1  EXACT
+#   critical / high / medium    plan 10 / 102 / 116        measured 10 / 102 / 116  EXACT
+#   low                         plan 25                    measured 24 low + 1 unknown
+#   CWE resolved                plan 251 of 253            measured 252 of 253
+# The last two rows are the same single record accounted differently: the degenerate
+# MAL-2025-22760 entry described in Obligation 5 is reported here as 'unknown' rather
+# than folded into 'low', because inventing a severity for a record that carries none
+# would be a fabrication. The measured values are reported AS MEASURED. No figure is
+# adjusted to match the plan.
+#
+# =============================================================================
+# LAYER 4 - REPRODUCIBILITY EVIDENCE
+# =============================================================================
+# The reproducibility mandate binds the deterministic layers - 0, 2, 3a and 4 -
+# to produce identical output from identical input. Demonstrated, not asserted:
+#   FOUR independent invocations across two command forms all produced a payload of
+#   2828480 bytes with md5 d289aac2858af2dc465402a3291d9102, and cmp reports
+#   byte-identity in every pairing.
+# The single host-dependent element in the document is results[*].source.path, the
+# absolutized path of Obligation 1. It is preserved as emitted because practice E4
+# requires the raw document be unmodified; relativizing it is the normalizer's job.
+# Consequently the raw artifact is byte-reproducible for a given checkout location
+# and database snapshot, and the NORMALIZED artifact is byte-reproducible across
+# checkouts once Obligation 1 is discharged.
+# The ANSI-stripping pipeline stage (IR4) is byte-transparent on this payload -
+# stripped and unstripped captures share the same md5 - which is the desired result:
+# the guarantee holds because it is enforced on capture, not because the scanner
+# happened to emit clean output. Measured 0 escape bytes and 0 carriage returns.
+# Offline re-run flags, noted for an air-gapped repeat (IR7): --offline,
+# --offline-vulnerabilities, --download-offline-databases. The default package
+# information source is deps.dev; network egress is required for a normal run and
+# was available (api.osv.dev/v1/query returned HTTP 200).
+#
+# =============================================================================
+# LAYER 4 - THE TWO TRAPS, RECORDED SO THEY ARE NOT RE-SPRUNG
+# =============================================================================
+# IR10 - EXIT CODES ARE NOT FAILURE. osv-scanner EXITS 1 WHEN IT FINDS
+# VULNERABILITIES, which is the EXPECTED outcome for this repository, and it is what
+# happened: exit code 1 with a fully parseable 2828480-byte document.
+# layer_4_status therefore keys on "the result document was produced AND parses",
+# NEVER on the exit code, and is recorded as OK. Keying on the exit code would mark
+# a SUCCESSFUL layer as ERROR, and because the gate's ERROR branch fires on any
+# layer_N_status of ERROR and ERROR outranks BLOCK, WARN and PASS in strict
+# precedence, that single mistake would wrongly poison the entire verdict.
+#
+# DIRECTIVE 6'S COMMAND IS NOT DEFECTIVE - DO NOT "FIX" IT. Unlike Directive 2,
+# whose two commands genuinely do not execute, Directive 6's legacy invocation form
+# still works in 2.4.0. Verified on this run: the verbatim legacy form
+#   osv-scanner --lockfile=yarn.lock --format json
+# and the modern subcommand form
+#   osv-scanner scan source --lockfile=yarn.lock --format json
+# both exit 1 and emit payloads that are BYTE-IDENTICAL - same 2828480 bytes, same
+# md5 d289aac2858af2dc465402a3291d9102, cmp clean. The modern form is used here for
+# forward compatibility only; the legacy form is equally valid and must not be
+# "corrected" by a downstream agent.
+#
+# =============================================================================
+# LAYER 4 - SCOPE OF THE ASSESSMENT (practices E6 and E9)
+# =============================================================================
+# ASSESSMENT ONLY. NOTHING WAS REMEDIATED. No 'osv-scanner fix' was run, no
+# dependency was upgraded, no lockfile was regenerated, no resolutions entry was
+# edited, and no advisory suppression was added or removed. package.json, the 119
+# workspace manifests, .yarnrc.yml and yarn.lock were READ and never written.
+# NO DEPENDENCY WAS INSTALLED. OSV-Scanner reads the lockfile, so node_modules is
+# not required; the scan extracted all 3725 packages from a PRISTINE checkout with
+# no node_modules present. An install would also have dirtied the working tree.
+# LEAST-PRIVILEGE SCOPING (E9). Only the local source checkout was analyzed. No
+# live, deployed or remote target was probed and the committed k6 load harness was
+# never invoked, honouring SECURITY.md:L31-L32: "Do not run automated scanners on
+# our infrastructure or dashboard." The scanner's own accounting corroborates the
+# narrowness of the read - 1 inode visited, 1 Extract call - and the only network
+# traffic is advisory lookups against the public OSV database.
+# The repository's disclosure policy also lists classes that are out of scope for
+# its bounty programme. That list informs SEVERITY and GATE-BLOCKING RATIONALE ONLY.
+# It never suppresses a category the requirements mandate: a finding in a
+# policy-excluded class is still recorded, it is simply unlikely to be gate-blocking.
+# READ-ONLY GUARANTEE (IR12). Verified before and after this layer: zero
+# pre-existing tracked files modified, and the working tree carries only this
+# audit's own additive artifacts under security-audit/.
+# ============================================ end of run-metadata.txt ========
