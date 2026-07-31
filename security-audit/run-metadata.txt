@@ -11257,4 +11257,102 @@ layer_status_ledger: layer_0_status=OK layer_2_status=OK layer_3a_status=OK laye
 #   findings-layer-1-arch.json / findings-layer-2-semgrep.json / findings-layer-3b-taint.json
 #   / mitigation-inventory-test.txt / codebase-profile.txt / layer-status.json / all three
 #   rule packs / run-metadata.txt: 0
+# =============================================================================
+# SECTION 24 - LAYER-STATUS LEDGER: FINAL SHAPE AND FRAMING
+# (supersedes, by name, the three earlier statements listed under 24.4)
+# =============================================================================
+# Recorded because three statements written about layer-status.json at earlier
+# checkpoints describe a shape the artifact no longer has. They are superseded here
+# rather than left to be discovered, which is the same discipline SECTION 22.10 used
+# when it superseded 21.3.
+#
+# ---------------------------------------------------------------------------
+# 24.1  THE KEY SET AS PUBLISHED
+# ---------------------------------------------------------------------------
+ledger_status_keys_published: 10 - the FOUR keys verification check 15 names verbatim
+  (layer_0_status, layer_2_status, layer_3a_status, layer_4_status) PLUS the SIX
+  short-form keys that are exactly the key set of findings-merged.json
+  _summary.layer_status (layer_0, layer_1, layer_2, layer_3a, layer_3b, layer_4).
+ledger_status_values_published: OK on all ten. Every value is drawn from the closed
+  vocabulary {OK, ERROR}; no null, boolean or other token appears in any status slot.
+ledger_why_the_agent_layers_are_now_RECORDED: check 15 asserts zero drift between this
+  ledger and the merged summary, and that summary carries SIX layer_status keys while
+  check 15 names only the four deterministic ones. A ledger holding four keys therefore
+  forces the merge implementer to DERIVE the remaining two, and a derived status is
+  exactly what IR3 exists to prevent - it cannot distinguish "the layer succeeded" from
+  "the layer never ran". Recording layer_1 and layer_3b here removes that derivation
+  step: the merge now populates all six keys from the ledger and invents nothing.
+ledger_this_is_not_a_backfill: the prohibition is on backfilling an ABSENT key with a
+  GUESS. Neither agent status is a guess. Each was computed at emit time from that
+  layer's own artifacts - findings-layer-1-arch.json (126 records, categories 1..10, no
+  category missing) with coverage-layer-1.txt (10 of 10 mandated lines persisted, 0
+  malformed), and findings-layer-3b-taint.json (40 records, categories 1..19) with
+  coverage-layer-3b.txt (19 of 19 persisted, 0 malformed). Neither artifact carries a
+  coverage flag on any record. Had either artifact been absent or unparsable, the emitter
+  would have WITHHELD the key rather than write one, preserving the check-15 signal.
+ledger_status_keys_deliberately_NOT_added: layer_1_status and layer_3b_status. Check 15
+  defines its *_status set over the PRE-AGENT steps, and widening that set would blur the
+  boundary the check draws. The agent layers are recorded in the short form only.
+ledger_harness_safety_invariant: every top-level key beginning with layer_ holds a status
+  STRING. All non-status provenance lives under the single non-layer_-prefixed container
+  "ledger", so a consumer that iterates layer_* keys and asserts the closed vocabulary
+  cannot trip over an object-valued key. The previous revision violated this: it carried
+  an object at top level under a layer_-prefixed name.
+#
+# ---------------------------------------------------------------------------
+# 24.2  FRAMING AS PUBLISHED
+# ---------------------------------------------------------------------------
+ledger_bytes: 8045
+ledger_sha256: 3986e4e9d2307ce001040da2577d9219c82fb9e654e5e5de28f4febce2858b69
+ledger_physical_lines: 1
+ledger_terminating_newline: 1 (the file ends with a single 0x0a byte)
+# 'wc -l', 'awk END{print NR}' and 'grep -c ""' all report 1 on this file. The artifact
+# is ONE line of minified JSON terminated by one LF, so no newline is embedded inside the
+# line. The termination was ADDED in this pass, for two reasons: the file-specific
+# instruction for this artifact states that 'wc -l' must report one line, which is only
+# true of an LF-terminated file; and it makes the ledger consistent with the four sibling
+# findings artifacts a reviewer diffs it against. This is the same correction, and the
+# same reasoning, that SECTION 16 applied to findings-layer-4-osv.json.
+ledger_bom_cr_nul_esc: 0 BOM, 0 CR, 0 NUL, 0 0x1b - re-verified by a byte scan after the
+  final write, which is AAP verification check 12.
+ledger_non_ascii_characters: 0 (unchanged by this pass)
+ledger_absolute_paths: 0 - every path named inside the artifact is repo-relative, and the
+  host checkout path appears nowhere in it.
+ledger_secret_values: none. The artifact records statuses, counts and criteria only.
+#
+# ---------------------------------------------------------------------------
+# 24.3  THE LAYER 2 SYNTAX-COMPLETENESS DISCLOSURE, CORRECTED
+# ---------------------------------------------------------------------------
+ledger_layer_2_disclosure_as_published: the parse-notice census is retained in full - 50
+  non-fatal notices, 47 PartialParsing plus 3 whole-file, 46 affected files by extension,
+  13 of them carrying at least one finding, 117 findings in affected files, and 117 of 463
+  normalized records flagged file_parse_complete false - and it now carries the verdict
+  COMPLETE, with its basis and a pointer to the affected-file allowlist section of this
+  file where the three secondary scans are recorded.
+ledger_layer_2_disclosure_previously_asserted: the previous revision labelled that census
+  with a partial status and told consumers Layer 2 coverage for those files "is incomplete
+  and the absence of a finding is not evidence of safety". That label CONTRADICTED the
+  verdict this file had already derived and proven: all three notice classes were
+  re-scanned with a compatible parser, zero findings were recovered, and no file was left
+  unaccounted for. The stale label understated demonstrated coverage and, on a
+  single-line artifact, put a coverage-shaped object carrying that value into a document
+  a merge step scans - the exact hazard the coverage-flag token discipline exists to
+  avoid. The census object is consequently named for scan completeness, not coverage.
+#
+# ---------------------------------------------------------------------------
+# 24.4  WHAT THIS SECTION SUPERSEDES, BY NAME
+# ---------------------------------------------------------------------------
+# 1. The ledger-scope record in SECTION 13, including its retained parallel account, which
+#    states that layer_1_status and layer_3b_status are absent from the ledger by design
+#    and that the merge implementer must derive layer_1 and layer_3b from the two
+#    reasoning artifacts. The ledger now records both, so nothing is derived. What that
+#    record says about NOT backfilling an absent key with a guess stands unchanged and is
+#    honoured: see ledger_this_is_not_a_backfill above.
+# 2. Both newline-convention statements that list layer-status.json among the artifacts
+#    carrying no terminating newline - the one in the framing record for the raw native
+#    scanner document and the one in the final closing census. The two raw scanner
+#    documents are unchanged and still carry none; layer-status.json now carries one LF.
+# 3. The one-line layer_status_ledger summary in SECTION 22.10, which enumerates the four
+#    deterministic keys. All four still read OK; the ledger simply carries six more.
+# Nothing else in this file is affected. No earlier line was edited or removed.
 # ============================================ end of run-metadata.txt ========
