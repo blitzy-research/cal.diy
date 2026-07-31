@@ -3510,9 +3510,17 @@ writer_scratch_fixtures_location: ephemeral, OUTSIDE the repository; the two in-
 # normalizer MUST do; what follows is what it DID, with the measurement for each.
 
 normalized_artifact: security-audit/findings-layer-4-osv.json
-normalized_artifact_bytes: 408631
-normalized_artifact_sha256: b7cc091672e4ab712b3d0fc1f55a4a761ad5d02d1a2bf440156e56fca629d065
+normalized_artifact_bytes: 408628
+normalized_artifact_sha256: f1ef85a9d22b7b4ada6c95a96504153e55c88659698e5a1f13254ae089e293e9
 normalized_artifact_records: 259
+# RE-MEASURED AFTER THE QA REMEDIATION PASS, which re-emitted this artifact in the
+# declared normalized_sort_key order and put one description into the package@version
+# form used by the other 258 (SECTION 23.4 and 23.6). The byte count fell by 3 and the
+# digest moved; the previous pair - 408631 B / b7cc091672e4ab712b3d0fc1f55a4a761ad5d02d
+# 1a2bf440156e56fca629d065 - described the pre-remediation emission and is retained
+# here, not deleted, because the sequence of values IS the audit trail. RECORD COUNT,
+# every dedup_key, every severity, every CWE and every other field are unchanged: the
+# only mutations were a one-record description rewrite and a re-ordering of the array.
 # MEASURED ON THE COMMITTED ARTIFACT. Every byte count and digest recorded for this
 # artifact before this entry is superseded, and each is quoted in the retained accounts
 # below rather than deleted, because the sequence of values IS the audit trail: the artifact
@@ -3792,7 +3800,64 @@ normalized_multi_version_records: 76
 # ---- OBLIGATION 2 discharged: severity, and the ONE coercion, declared ---------
 normalized_severity_source_group_max: 256
 normalized_severity_source_database_label: 2
-normalized_severity_source_unknown: 1
+normalized_severity_source_impact_class: 1
+# THE SEVERITY-SOURCE CHAIN HAS FOUR STEPS, NOT THREE, and the fourth is named here so
+# the documented chain matches the emitted tokens exactly (QA remediation, SECTION 23.5):
+#   1 group_max        groups[*].max_severity through the published CVSS bands - 256
+#   2 database_label   the advisory's own severity label when no score exists - 2
+#   3 impact_class     the advisory CLASS, used only for OSV MAL- (malicious package)
+#                      records, which carry no CVSS vector, no group maximum and no
+#                      database label at all - 1, namely http|MAL-2025-22760. It is a
+#                      DERIVATION, not a floor: a confirmed-malicious package that
+#                      resolves in the dependency graph executes attacker-authored code
+#                      at install and load time, which is a high-impact outcome, and the
+#                      likelihood of that path being taken is expressed separately in the
+#                      reachability field rather than folded into severity. The record
+#                      carries a 400+ character severity_basis stating exactly this.
+#   4 unknown          the terminal fallback, RETAINED IN THE CHAIN but NOT EXERCISED on
+#                      this run - 0 records. AAP verification check 9 closes the emitted
+#                      vocabulary at critical|high|medium|low, so a record that reached
+#                      this step would have to be emitted at the vocabulary FLOOR with
+#                      the coercion declared on the record; no record does.
+# The entry that stood here before this pass read "normalized_severity_source_unknown: 1"
+# and is superseded: it was written before the impact_class derivation existed, it does
+# not match the token the emitted record carries, and it is the reason a reviewer
+# applying the three-step chain to the raw data could not reproduce the artifact. The
+# ADVISORY-LEVEL census earlier in this file still says unknown, correctly, because at
+# that stage nothing had been derived yet.
+normalized_severity_source_impact_class_corroboration: FIRST-PARTY AND EXTERNAL, both
+  re-measured during the QA remediation pass rather than assumed.
+  FIRST PARTY, from the preserved raw scan security-audit/results-osv.json: the http
+  package block carries package {name http, version 0.0.1-security, ecosystem npm}; its
+  MAL-2025-22760 vulnerability object has NO severity key at all; its affected[0] carries
+  only database_specific, package and ranges - no versions array; aliases is absent; and
+  the enclosing group is {ids [MAL-2025-22760], aliases [MAL-2025-22760], max_severity ""}
+  - an EMPTY STRING, not a number. Step 1 of the chain therefore cannot resolve, step 2
+  has no label to read, and step 3 is the only step that can produce a value at all.
+  EXTERNAL, read from the upstream record itself: the published advisory presents no
+  severity row, no CVSS vector and no numeric score in either its HTML view or its
+  machine-readable form, lists no alias and no CVE, and its details text reads "The
+  package http was found to contain malicious code." Two independent sources therefore
+  agree that no score exists to derive from, which is what makes impact_class a
+  derivation of last resort rather than a preference.
+normalized_version_provenance_mal_record: the version 0.0.1-security carried in this
+  record's versions array and named in its description comes from the SCANNER'S LOCKFILE
+  MATCH (results-osv.json packages[].package.version, corroborated at yarn.lock lines
+  24667-24669 "http@npm:0.0.1-security"), NOT from the advisory. The advisory expresses
+  its affected set only as a SEMVER range with a single Introduced 0 event and no Fixed
+  event, so 0.0.1-security is INSIDE the unbounded affected range rather than enumerated
+  by the advisory. Stated explicitly so no reader attributes the version to OSV.
+normalized_cwe_506_abstraction_note: CWE-506 Embedded Malicious Code is a CLASS-level
+  entry that its authority marks usable for real-world mapping only with careful review,
+  and it has four Base-level children - 507 Trojan Horse, 510 Trapdoor, 511 Logic/Time
+  Bomb and 512 Spyware. The "most specific CWE" obligation was therefore re-tested
+  against those children during this pass: MAL-2025-22760 supplies NO behavioural detail
+  whatsoever (its entire details text is the single sentence quoted above), so no Base
+  child can be substantiated from the evidence, and the Class-level entry is the most
+  specific classification the advisory actually supports. Recorded because choosing a
+  Base child here would be a guess dressed as precision, which practice E8 forbids. The
+  official name of the entry was re-read from the authority and matches the value used in
+  the artifact character for character: "Embedded Malicious Code".
 normalized_severity_critical: 10
 normalized_severity_high: 107
 normalized_severity_medium: 118
@@ -3815,8 +3880,16 @@ normalized_severity_medium: 118
 #   normalized_severity_high: 106
 #   normalized_severity_medium: 118
 #   .... end retained parallel account
-normalized_severity_low: 25
+normalized_severity_low: 24
 normalized_severity_total: 259
+# THE VALUE 25 STOOD HERE BEFORE THE QA REMEDIATION PASS and is superseded (SECTION
+# 23.5). It was the pre-impact_class figure, when the MAL-2025-22760 record was still
+# emitted at the vocabulary floor 'low'; once that record was derived to 'high' from its
+# advisory impact class the low bucket fell to 24. The tell is arithmetic and needs no
+# re-reading of the artifact: 10 + 107 + 118 + 25 = 260, which cannot reconcile against
+# normalized_severity_total, while 10 + 107 + 118 + 24 = 259 does. The 'low 25 plus
+# unknown 0' reading and the 'low 24 plus high +1' reading describe the same single
+# record under two different constraints, and only the second matches the emitted bytes.
 # The census moved with the corrected dedup key and by exactly the amount the key
 # predicts, which is itself a check on the expansion: the six co-assigned advisories
 # each contribute their severity a second time - four of them high and two medium - so
@@ -4510,7 +4583,14 @@ normalized_determinism_idempotent: YES - re-normalizing the artifact reproduces 
   exactly, because the version-tail rewrite recognises the corrected tail as well as
   the superseded one and the per-CVE expansion is keyed on identity
 normalized_determinism_digest_matches_artifact_on_disk: YES
-normalized_determinism_committed_digest: b7cc091672e4ab712b3d0fc1f55a4a761ad5d02d1a2bf440156e56fca629d065
+normalized_determinism_committed_digest: f1ef85a9d22b7b4ada6c95a96504153e55c88659698e5a1f13254ae089e293e9
+  - RE-READ AFTER THE QA REMEDIATION PASS (SECTION 23.4/23.6), which re-emitted the
+  artifact in the declared sort order. The digest asserted here before that pass,
+  b7cc091672e4ab712b3d0fc1f55a4a761ad5d02d1a2bf440156e56fca629d065, described the
+  pre-remediation emission and is retained rather than deleted. The determinism CLAIM is
+  unaffected in substance: normalization remains deterministic and idempotent, and the
+  sort is now part of the deterministic emission rather than a property the emitted array
+  merely happened to have. Re-normalizing the committed artifact reproduces it exactly.
   - the digest the determinism claim is asserted OVER, re-read from
   security-audit/findings-layer-4-osv.json after the final correction pass. Every digest quoted
   in this entry and in the retained accounts below was measured over an earlier emission of the
@@ -4606,6 +4686,28 @@ normalized_sort_key: (severity rank critical<high<medium<low, package name, CVE 
   CVE-keyed emission too, because the third component is the dedup_key and the 259
   dedup_keys are unique, so no two records can tie and filesystem or dict iteration
   order cannot leak into the output
+normalized_sort_key_realized_in_emission: YES, as of the QA remediation pass (SECTION
+  23.4). THIS WAS NOT TRUE OF THE PRECEDING EMISSION and the deviation is recorded rather
+  than quietly fixed. The pass that re-keyed the artifact from (package_name, advisory_id)
+  to the directive's literal (package_name, CVE_ID) added six records and APPENDED them
+  after the already-sorted body instead of merging them into sorted position. Five landed
+  where the key would have placed them anyway; the sixth, http|MAL-2025-22760, did not,
+  because the same pass had also moved it from the 'low' band to 'high' via the
+  impact_class derivation. The emitted array was therefore two sorted runs - 250 records
+  then 9 - with a single descent at index 250, and the severity blocks were
+  non-contiguous (critical 10, high 106, medium 118, low 16, high 1, low 8). Re-emitting
+  all 259 records under the declared key RELOCATES EXACTLY ONE RECORD, index 250 -> 47,
+  between hono|CVE-2026-54290 and i18next-fs-backend|CVE-2026-41693; the other 258 keep
+  their relative order exactly, and 204 of them shift index by one purely as a
+  consequence of the insertion. VERIFIED ON THE COMMITTED ARTIFACT: zero descents under
+  the four-component reading AND under a stricter five-component reading that separates
+  cve from advisory, and the severity blocks are now contiguous critical 10 / high 107 /
+  medium 118 / low 24, which is the census this file declares. Two earlier statements in
+  this file - the 32-assertion verification block's "record order unchanged (the sort key
+  is untouched)" and direct_dependency_field_diff's "the record order and the 253
+  dedup_keys are unchanged" - remain TRUE OF THEIR OWN PASSES, each of which perturbed no
+  record's position; neither was a claim that the emitted array satisfied the declared
+  key, and the append that did break it happened in a different pass.
 normalized_severity_bands: none 0.0 | low 0.1-3.9 | medium 4.0-6.9 | high 7.0-8.9 |
   critical 9.0-10.0 - the published CVSS bands, not a locally chosen cut-off. A 0.0
   score would map to the vocabulary floor 'low'; no record on this run scores 0.0.
@@ -4839,11 +4941,29 @@ normalized_l2_description_derivation: AUTHORED CONDENSATION, one per fired rule,
   "true" for 451 records would be false, and one that reads "false" everywhere carries no
   information. Two additive fields replace it and together preserve strictly more provenance:
     description_derivation   "verbatim_sarif_message" | "condensed_from_sarif_message"
-    sarif_message_chars      the full, uncondensed message.text length for that rule
+                             | "expanded_from_sarif_message"  <- THIRD VALUE ADDED BY THE QA
+                             REMEDIATION PASS, see SECTION 23.2. The two-value enumeration
+                             this line originally declared had no correct label for an
+                             AUTHORED EXPANSION, so five records that expand a very short
+                             rule message were labelled "condensed". They now carry the
+                             third value; nothing else about them changed.
+    sarif_message_chars      the full, uncondensed message.text length for that rule -
+                             len(message.text) VERBATIM, whitespace included. One record
+                             carried the whitespace-STRIPPED length; corrected by the QA
+                             remediation pass, see SECTION 23.1.
   MEASURED: verbatim 7 of 463 (the wildcard-postMessage rule, whose 177-character message already
   fits and is therefore carried through unchanged), condensed 456 of 463; sarif_message_chars
   range 34-541. A reviewer can compute the condensation ratio for any record without re-running
   the scan, which the retired boolean did not permit.
+  RE-MEASURED AFTER THE QA REMEDIATION PASS, which is the authoritative split for the
+  committed artifact: verbatim 7, condensed 451, expanded 5 - total 463. The five expanded
+  records are the secrets-pack findings at indices 436, 437, 438, 460 and 461: four
+  detected-google-gcm-service-account records whose 37-character message becomes a
+  179-character description, and one detected-google-oauth-access-token record whose
+  34-character message becomes a 170-character description. The direction of the transform is
+  therefore recoverable from the pair (description_derivation, sarif_message_chars) on every
+  record, which is what the label exists for. sarif_message_chars range is unchanged at 34-541
+  because the single corrected record moved 249 -> 250, inside the existing range.
 #   .... RETAINED PARALLEL ACCOUNT (a SUPERSEDED derivation, retained in full because it measures the 14 fired rules and their message lengths, which the live entry states only in summary). Superseded as a live entry by the
 #   .... resolution above; kept verbatim because it carries evidence the live entry
 #   .... does not restate. Nothing below is an active field value.
@@ -4966,8 +5086,17 @@ normalized_l2_schema_keys: 24 - the 7 mandated (file, line, severity, cwe, descr
                              condensed) and dropping the first would make the second's
                              451/12 split unreadable.
     description_summarized   451 true, 12 false
-    description_derivation   condensed_from_sarif_message 456, verbatim_sarif_message 7
-    sarif_message_chars      the full uncondensed message.text length for that rule, 34-541
+    description_derivation   condensed_from_sarif_message 451, verbatim_sarif_message 7,
+                             expanded_from_sarif_message 5 - RE-MEASURED ON THE COMMITTED
+                             ARTIFACT AFTER THE QA REMEDIATION PASS. The figure 456 recorded
+                             for condensed_from_sarif_message before that pass counted the
+                             five authored expansions in the condensed bucket for want of a
+                             third enumerated value; 451 + 7 + 5 = 463 either way, so the
+                             total was never wrong, only the attribution. See SECTION 23.2.
+    sarif_message_chars      the full uncondensed message.text length for that rule, VERBATIM
+                             including trailing whitespace, 34-541. One record carried the
+                             stripped length (249 for a 250-character message) and is
+                             corrected on the committed artifact. See SECTION 23.1.
     file_parse_complete      346 true, 117 false - whether the scanned file parsed cleanly,
                              which is what makes the 50 warn-level parse errors traceable
                              to the individual findings they touch
@@ -8792,6 +8921,101 @@ layer_3b_check_16_discipline: every one of the 26 records anchors to a file:line
   in Layer 1, and the Layer 3b record for the same attack path names it and says
   where it went. Reporting them here would have failed check 16 rather than
   adding coverage.
+layer_3b_category_cwe_pairing_rule: STATED ONCE HERE AND APPLIED UNIFORMLY, so that no
+  deviation from the requirements' per-category canonical CWE is left to be inferred
+  (QA remediation, SECTION 23.7). THE RULE: `category` names the SINK COLUMN the finding
+  was evaluated under - it is a coverage coordinate and is what verification check 7 keys
+  on - while `cwe` names the MOST SPECIFIC WEAKNESS ACTUALLY PRESENT at that sink. The
+  two fields answer different questions and are deliberately allowed to disagree, because
+  the requirements' own critical directives mandate classification by the most specific
+  CWE, and Block 8 fixes only ONE canonical CWE per category while several categories
+  admit findings whose real weakness is narrower or simply different. Where the canonical
+  CWE IS the most specific one present, it is used - which is the case on 33 of the 40
+  emitted records. The 7 records that depart are enumerated below WITH the departure
+  justified, none is silent, and no verification check keys on the pairing.
+layer_3b_category_cwe_deviations: 7 of 40, each verified against the authoritative CWE
+  definition (name, abstraction level, mapping status and description text all re-read
+  from the CWE catalogue during this pass, version 4.20):
+    cat 3  Log Injection, canonical CWE-117 Improper Output Neutralization for Logs
+      -> CWE-532 Insertion of Sensitive Information into Log File on 3 records
+         (apps/api/v2/src/filters/http-exception.filter.ts:21,
+          apps/api/v2/src/middleware/request-ids/request-id.interceptor.ts:36,
+          apps/api/v2/src/middleware/request-ids/request-id.middleware.ts:24)
+      WHY: CWE-117 is a NEUTRALIZATION failure - "does not neutralize or incorrectly
+      neutralizes special elements" - whose alternate term is "log forging" and whose
+      consequences are Integrity and Non-Repudiation. These three legs log credential
+      material FAITHFULLY; nothing is forged and no special element is mishandled. CWE-532
+      is "The product writes sensitive information to a log file", a single Confidentiality
+      consequence of Read Application Data. Both are Base-level and both are ALLOWED for
+      mapping, so the change is strictly a gain in specificity with no abstraction cost.
+      Already recorded in detail under layer_3b_c1_resolution below; listed here so the
+      deviation census is complete in one place.
+    cat 13 IDOR / Tenant Isolation, canonical CWE-639 Authorization Bypass Through
+      User-Controlled Key
+      -> CWE-862 Missing Authorization on 1 record
+         (apps/api/v2/src/modules/teams/event-types/teams-event-types.repository.ts:117)
+      WHY: CWE-639 PRESUPPOSES existing authorization functionality that then fails "by
+      modifying the key value", and its own extended text speaks of bypassing "any other
+      authorization checks present in the system". On this route there is no check to
+      bypass at all - the organization path runs with no authentication guard - which is
+      precisely CWE-862's "does not perform an authorization check". The parents make the
+      same distinction: CWE-862 sits under CWE-285 Improper Authorization (omission),
+      CWE-639 under CWE-863 Incorrect Authorization (performed and wrong). CWE-862 is
+      Class-level and mapped ALLOWED-WITH-REVIEW, so its Base children were examined as
+      that status requires - 425 Direct Request, 638 Not Using Complete Mediation, 939
+      Improper Authorization in Handler for Custom URL Scheme, 1314 Missing Write
+      Protection for Parametric Data Values - and none fits an API route that omits a
+      tenant-scoping check, so the Class-level entry is retained deliberately.
+    cat 14 Information Disclosure via Query, canonical CWE-200 Exposure of Sensitive
+      Information to an Unauthorized Actor -> three different, more specific weaknesses on
+      3 records. A general point governs all three and is worth stating because it is
+      counter-intuitive: the CWE catalogue itself marks CWE-200 DISCOURAGED for mapping,
+      on the stated grounds that confidentiality loss is a TECHNICAL IMPACT rather than a
+      root-cause error, and instructs "If an error or mistake causes information to be
+      disclosed, then use the CWE ID for that error." Emitting CWE-200 where a specific
+      weakness is identifiable would therefore contradict both the requirements'
+      most-specific-CWE directive and the catalogue's own mapping guidance.
+      -> CWE-639 Authorization Bypass Through User-Controlled Key
+         (apps/api/v2/src/modules/atoms/services/verification-atom.service.ts:80)
+      WHY: every element of CWE-639's definition is instantiated literally - a key value
+      under user control (the teamId query parameter), access to another user's records
+      (another team's verified emails), and authorization functionality that does not
+      prevent it (no membership check). Its alternate terms are IDOR, BOLA and Horizontal
+      Authorization, the last defined as key-based access in a multi-user context, which is
+      exactly team-scoped multi-tenancy. Base-level and ALLOWED, versus Class-level and
+      DISCOURAGED for the canonical value.
+      -> CWE-522 Insufficiently Protected Credentials
+         (apps/api/v2/src/modules/webhooks/webhooks.repository.ts:77)
+      WHY: the datum disclosed is a webhook SIGNING SECRET, i.e. credential material, and
+      CWE-522 narrows the canonical entry on three axes at once - subject matter
+      ("authentication credentials" rather than any sensitive information), behaviour
+      ("transmits or stores"), and failure mode ("an insecure method that is susceptible to
+      unauthorized interception and/or retrieval"). Its consequence is Gain Privileges or
+      Assume Identity under Access Control, which captures the real harm - the holder can
+      forge signed subscriber payloads - where CWE-200's Read Application Data does not.
+      STATED PRECISELY TO AVOID OVERCLAIMING: CWE-522 is NOT a descendant of CWE-200; both
+      are children of CWE-668 Exposure of Resource to Wrong Sphere, so they are siblings.
+      CWE-522 is narrower in subject matter, not lower in the same lineage. Its own
+      credential-specific children (256, 257, 260, 261, 523, 549) were examined as its
+      ALLOWED-WITH-REVIEW status requires and none fits an over-selecting database query.
+      -> CWE-1049 Excessive Data Query Operations in a Large Data Table
+         (apps/api/v1/pages/api/payments/[id].ts:47)
+      WHY, AND WITH AN EXPLICIT LIMIT DISCLOSED because a partial fit reported as a clean
+      one would violate practice E8: CWE-200 is affirmatively WRONG here, because its
+      definition requires exposure "to an actor" and on this path the surplus rows never
+      leave the process - the response carries schemaPaymentPublic output alone, so there
+      is no actor and no exposure, only excessive materialisation. CWE-1049's NAME
+      ("Excessive Data Query Operations in a Large Data Table") and its sole consequence
+      (Reduce Performance, scope Other, security-relevant only if the code is
+      attacker-reachable) match the finding exactly, and it is Base-level and ALLOWED.
+      THE LIMIT: CWE-1049's DESCRIPTION text narrows to a query "with a large number of
+      joins and sub-queries", and its extended description records the CISQ defaults of
+      one million rows, five joins and three sub-queries. A join-free, sub-query-free
+      over-fetch does NOT meet those numeric criteria. The mapping therefore rests on the
+      entry's name and consequence rather than on its description, and it is emitted at
+      severity low and gateBlocking false, which is the honest weight for a fit of that
+      strength. No closer entry exists in the catalogue for over-materialisation without
+      disclosure, and inventing one is not an option.
 layer_3b_category_numbering: the additive `category` field uses the LAYER 3B
   numbering (12 = Cookie, 9 = Format String), which is NOT the Layer 3a pattern
   table numbering (9 = Cookie, 12 = Format String). One consequence is visible
@@ -10147,6 +10371,16 @@ layer_2_records_total_unchanged: 463
 # URI. Both are conditional, and the rewritten descriptions keep that modality while
 # naming the sanitizer or the server-side producer observed on each path.
 #
+# LOCATOR CORRECTION APPLIED BY THE QA REMEDIATION PASS (see SECTION 23.3). Two of these
+# four re-statements - the confirm-email.html:474 and :538 records, indices 454 and 455
+# zero-based - cite the file:line at which base_url is bound to the WEBAPP_URL constant.
+# They cited packages/features/auth/lib/sendVerificationRequest.ts:34, which is the
+# enclosing emailTemplate({ call; the binding itself is on the next line. Both now cite
+# :35, which is the line a reviewer must open to check the claim. Re-read from disk at
+# correction time: L34 "html: emailTemplate({", L35 "base_url: WEBAPP_URL,". The edit is
+# length-neutral - both descriptions remain exactly 200 characters, the inclusive bound -
+# and no other field on either record changed.
+#
 # ---------------------------------------------------------------------------
 # 22.3  LAYER 1 ADDITIONS - F5 TO F16
 # ---------------------------------------------------------------------------
@@ -10719,4 +10953,308 @@ layer_status_ledger: layer_0_status=OK layer_2_status=OK layer_3a_status=OK laye
 # headers and long base64 assignments to KEY/SECRET/TOKEN/PASSWORD names. Zero matches.
 # Findings cite file, line, secret class and length only.
 #
+# ============================================================================
+# SECTION 23 - QA CHECKPOINT REMEDIATION PASS: THE SEVEN ISSUES, THEIR
+#              RESOLUTIONS, AND THE RE-MEASURED ARTIFACT LEDGER
+# ============================================================================
+#
+# WHY THIS SECTION EXISTS AND WHAT IT OUTRANKS. A QA testing pass interrogated the seven
+# artifacts new since the previous milestone - findings-layer-1-arch.json,
+# findings-layer-2-semgrep.json, findings-layer-3b-taint.json, findings-layer-4-osv.json,
+# results-semgrep.json, coverage-layer-1.txt and coverage-layer-3b.txt - executing 328 test
+# cases. It confirmed that EVERY AAP-mandated contract passes and that every applicable
+# verification check (2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 16) passes, and it raised SEVEN
+# issues: three MINOR and four INFO, with zero CRITICAL and zero MAJOR. Every one of the
+# seven was a DECLARED-SEMANTIC versus EMITTED-VALUE mismatch in an ADDITIVE, non-mandated
+# provenance field or invariant - none touched a mandated field, a verification check, the
+# raw-to-normalized accounting, a severity or CWE derivation, or the gate-blocking set.
+# All seven are resolved here. Where any figure ANYWHERE ABOVE disagrees with a figure in
+# this section, the figure HERE is authoritative; earlier figures are retained rather than
+# deleted because the sequence of values IS the audit trail. Nothing in 23.9 is copied
+# from an earlier entry - every number was re-measured off disk after the last write.
+#
+# THE PASS TOUCHED THREE FILES, ALL OF THEM AUDIT ARTIFACTS UNDER security-audit/:
+#   findings-layer-2-semgrep.json   8 record-level field mutations (issues 1, 2, 3)
+#   findings-layer-4-osv.json       1 description rewrite + array re-ordering (issues 4, 6)
+#   run-metadata.txt                this section plus targeted additive corrections to the
+#                                   declarations the QA identified (issues 1, 2, 3, 5, 7)
+#   findings-layer-3b-taint.json    NOT MODIFIED - byte-identical. Issue 7 was a disclosure
+#                                   gap, not a wrong value, so the fix is documentation.
+#   findings-layer-1-arch.json      NOT MODIFIED - the QA found no issue in it (22 of 22
+#                                   test cases passed).
+#
+# ---------------------------------------------------------------------------
+# 23.1  ISSUE 1 (MINOR) - sarif_message_chars was one short on one record
+# ---------------------------------------------------------------------------
+# REPORTED: record 450 of findings-layer-2-semgrep.json - the sole result of rule
+# javascript.lang.security.detect-child-process.detect-child-process at
+# packages/app-store-cli/src/utils/execSync.ts:10 - carried sarif_message_chars 249 while
+# the SARIF message.text for that rule is 250 characters, ending in a trailing space. 13
+# of the 14 fired rules matched exactly; this was the only deviation.
+# ROOT CAUSE: the normalizer measured the WHITESPACE-STRIPPED length, while this file
+# declares the field to be "the full, uncondensed message.text length for that rule". The
+# stripped and unstripped lengths coincide for 13 of the 14 rules, so a single trailing
+# space in one rule's message was the only place the two readings could diverge.
+# RESOLUTION: the field is now recomputed for EVERY record as len(message.text) VERBATIM,
+# joined from security-audit/results-semgrep.sarif on the record's rule id, with a
+# per-rule constancy assertion that fails loudly if one rule ever yields two lengths. The
+# declared semantic in SECTION 16 was tightened to say "VERBATIM, whitespace included" so
+# the wording can no longer be read either way.
+# VERIFIED: re-derived over all 463 records against the SARIF driver - 0 mismatches (was
+# 1). The QA's own reproduction now prints 250 from the artifact and 250 from the SARIF.
+# sarif_message_chars range is unchanged at 34-541 because 249 -> 250 stays inside it.
+#
+# ---------------------------------------------------------------------------
+# 23.2  ISSUE 2 (MINOR) - five authored EXPANSIONS were labelled condensations
+# ---------------------------------------------------------------------------
+# REPORTED: the five secrets-pack records - indices 436, 437, 438, 460, 461, being four
+# detected-google-gcm-service-account records and one detected-google-oauth-access-token
+# record - carried description_derivation "condensed_from_sarif_message" while their
+# descriptions (179, 179, 170, 179, 179 characters) are LONGER than the rule messages they
+# derive from (37, 37, 34, 37, 37). The sibling flag description_summarized was correctly
+# false on all five, so the artifact's two provenance fields disagreed in effect.
+# ROOT CAUSE: the enumeration declared only two values, verbatim_sarif_message and
+# condensed_from_sarif_message. A very short rule message such as "Detected a Google GCM
+# Service Account" names a credential class but does not state the vulnerability, which D7
+# requires a description to do, so those five descriptions were AUTHORED UPWARD from the
+# rule's subject matter. The enumeration had no correct label for that direction, and
+# "condensed" was chosen as the closest available - a labelling defect, not a content one.
+# RESOLUTION: a third enumerated value, expanded_from_sarif_message, is added and applied
+# to exactly those five records. The selection was made by a STRUCTURAL predicate, not by
+# index - derivation is condensed AND description_summarized is false AND
+# len(description) > sarif_message_chars - and that predicate selects precisely the five.
+# The three-value enumeration and the re-measured split are declared in SECTION 16.
+# CONTENT WAS NOT CHANGED AND IS NOT FABRICATED: each of the five descriptions states the
+# credential-exposure vulnerability its short rule message names, no secret value appears
+# in any of them, and the direction of the transform is now recoverable from the pair
+# (description_derivation, sarif_message_chars) on every record - which is the whole point
+# of carrying the label.
+# VERIFIED: cross-tab on the committed artifact is exactly
+# (condensed, summarized=true) 451 / (verbatim, false) 7 / (expanded, false) 5 = 463; the
+# expanded set is exactly the five secrets-pack records; every expanded description is
+# provably longer than its source message.
+#
+# ---------------------------------------------------------------------------
+# 23.3  ISSUE 3 (INFO) - two descriptions cited the enclosing call site, one line early
+# ---------------------------------------------------------------------------
+# REPORTED: the var-in-href records for packages/emails/templates/confirm-email.html:474
+# and :538 both stated that base_url is bound to WEBAPP_URL at
+# packages/features/auth/lib/sendVerificationRequest.ts:34, where line 34 is
+# "html: emailTemplate({" and line 35 is "base_url: WEBAPP_URL,".
+# RESOLUTION: both now cite :35, the line a reviewer must actually open to check the claim.
+# Recorded in SECTION 22.2 next to the four var-in-href re-statements themselves.
+# VERIFIED: both descriptions end "...sendVerificationRequest.ts:35."; the file was
+# re-read from disk at correction time; the edit is length-neutral, so both records remain
+# exactly 200 characters, the inclusive bound, and check 13 is unaffected. The third and
+# fourth var-in-href records were not touched - one cites no line and the other cites a
+# rewritten-origin claim rather than a binding line.
+#
+# ---------------------------------------------------------------------------
+# 23.4  ISSUE 4 (MINOR) - the emitted order did not realize the declared sort key
+# ---------------------------------------------------------------------------
+# REPORTED: findings-layer-4-osv.json violated its own declared normalized_sort_key. The
+# array was two sorted runs, 250 records then 9, with a single descent at index 250, and
+# its severity blocks were non-contiguous (critical 10, high 106, medium 118, low 16,
+# high 1, low 8). The QA tested ten plausible readings of the declared key and the shipped
+# file was fully sorted under none of them.
+# ROOT CAUSE, confirmed and now on the record next to the key itself: the pass that re-keyed
+# the artifact from (package_name, advisory_id) to the directive's literal
+# (package_name, CVE_ID) added six records and APPENDED them after the already-sorted body.
+# Five of the six landed where the key would have placed them anyway. The sixth,
+# http|MAL-2025-22760, did not, because the SAME pass had also moved that record from the
+# low band to high through the impact_class derivation - which is why issues 4, 5 and 6 all
+# converge on one record.
+# RESOLUTION: all 259 records are re-emitted under the declared key. Exactly ONE record
+# relocates, index 250 -> 47, between hono|CVE-2026-54290 and i18next-fs-backend|
+# CVE-2026-41693. The other 258 keep their relative order exactly - asserted, not assumed -
+# and 204 of them shift index by one purely as a consequence of the insertion.
+# VERIFIED: zero descents under the four-component reading and under a stricter
+# five-component reading that separates cve from advisory; severity blocks now contiguous
+# critical 10 / high 107 / medium 118 / low 24, which is the census this file declares;
+# the record set is proven unchanged by comparing sorted dedup_key multisets (259 in, 259
+# out, 0 duplicates, 0 loss, 0 extras). The array is now sorted under every alternative
+# reading re-tested, where before it satisfied none.
+# WHY THIS MATTERED DESPITE BOUNDED IMPACT: no mandated field and no verification check
+# tests ordering, so nothing was wrong in the findings themselves. But the declared key
+# exists so that a baseline diff sees only real movement, and a later milestone persists
+# baseline.json. Correcting the order BEFORE a baseline exists costs one record's position;
+# correcting it after would have manufactured spurious drift across 204 rows.
+#
+# ---------------------------------------------------------------------------
+# 23.5  ISSUE 5 (INFO) - impact_class was a fourth severity source outside the chain
+# ---------------------------------------------------------------------------
+# REPORTED: applying the documented group_max -> database_label -> unknown chain to the
+# live raw data resolves http|MAL-2025-22760 to "unknown", while the artifact emits
+# severity_source "impact_class" and severity "high" - a fourth source.
+# RESOLUTION: the chain is now declared with FOUR steps and per-step counts (group_max 256,
+# database_label 2, impact_class 1, unknown 0 and not exercised), and the two live entries
+# that still described the three-step chain were corrected: severity_source_unknown: 1 is
+# superseded by severity_source_impact_class: 1, and normalized_severity_low: 25 is
+# corrected to 24. The arithmetic tell for the stale figure is recorded alongside it -
+# 10 + 107 + 118 + 25 = 260 cannot reconcile against the declared total of 259, while
+# 10 + 107 + 118 + 24 = 259 does.
+# THE DERIVATION IS UNAVOIDABLE, AND THAT IS NOW EVIDENCED FROM TWO SOURCES. First party:
+# in the preserved raw scan the vulnerability object has NO severity key and its enclosing
+# group carries max_severity "" - an empty string, not a number - so chain step 1 cannot
+# resolve and step 2 has no label to read. Externally: the upstream advisory presents no
+# severity row, no CVSS vector and no numeric score in either its human or its
+# machine-readable form, and lists no alias and no CVE. Meanwhile AAP verification check 9
+# closes the emitted vocabulary at critical|high|medium|low, so "unknown" is not emittable.
+# impact_class is therefore a derivation of last resort, not a preference, and the record
+# carries a 400+ character severity_basis stating exactly that.
+#
+# ---------------------------------------------------------------------------
+# 23.6  ISSUE 6 (INFO) - one description used a prose version form
+# ---------------------------------------------------------------------------
+# REPORTED: the same MAL-2025-22760 record wrote its version in prose - "The npm package
+# http at 0.0.1-security ..." - while the other 258 descriptions use package@version.
+# RESOLUTION: the description now reads "The npm package http@0.0.1-security is a
+# confirmed-malicious package and a direct dependency of apps/api, so installing or loading
+# it runs attacker-authored code in that process." - 178 characters, inside the 200 bound.
+# VERIFIED: all 259 descriptions now carry the package@version form and zero prose-form
+# version descriptions remain.
+# TWO PROVENANCE POINTS THE QA RAISED ON THE SAME RECORD, both now declared next to the
+# severity chain rather than left implicit. (1) cwe_all carries the inferred CWE-506
+# alongside cwe, which is stated in cwe_basis rather than hidden; the record's four CWE
+# provenance fields (cwe_resolved false, cwe_source and cwe_selection
+# assigned_from_advisory_class, and a cwe_basis opening "INFERRED, not supplied by OSV")
+# make the weaker provenance impossible to mistake for an OSV-supplied value. (2) The
+# version 0.0.1-security comes from the SCANNER'S LOCKFILE MATCH, corroborated at
+# yarn.lock lines 24667-24669, and NOT from the advisory, whose affected set is an
+# unbounded SEMVER range with a single Introduced 0 event and no versions array at all.
+# Additionally, because CWE-506 is a CLASS-level entry that its authority marks usable only
+# with careful review, the most-specific-CWE obligation was re-tested against its four Base
+# children (507 Trojan Horse, 510 Trapdoor, 511 Logic/Time Bomb, 512 Spyware); the advisory
+# supplies no behavioural detail whatsoever, so none can be substantiated and the
+# Class-level entry is the most specific classification the evidence supports.
+#
+# ---------------------------------------------------------------------------
+# 23.7  ISSUE 7 (INFO) - seven category/CWE pairings depart from Block 8, four silently
+# ---------------------------------------------------------------------------
+# REPORTED: 7 of the 40 Layer 3b records carry a CWE other than their category's canonical
+# value - category 3 uses CWE-532 on three records, category 13 uses CWE-862 on one, and
+# category 14 uses CWE-1049, CWE-639 and CWE-522 on three. Only the CWE-532 trio was
+# justified in writing; the other four were tabulated without rationale.
+# RESOLUTION, DOCUMENTATION ONLY - findings-layer-3b-taint.json is byte-identical, because
+# in every case the emitted CWE is the CORRECT most-specific value and only its disclosure
+# was missing. Two entries were added next to layer_3b_category_numbering: a
+# layer_3b_category_cwe_pairing_rule that states the governing rule ONCE - category names
+# the SINK COLUMN and is what check 7 keys on, while cwe names the MOST SPECIFIC WEAKNESS
+# ACTUALLY PRESENT, and the two are deliberately allowed to disagree because the AAP's
+# critical directives mandate most-specific-CWE classification while Block 8 fixes only one
+# canonical CWE per category - and a layer_3b_category_cwe_deviations census that justifies
+# all seven from the authoritative CWE definitions, which were re-read during this pass
+# (catalogue version 4.20) rather than paraphrased from memory. 33 of the 40 records DO
+# carry their category's canonical CWE.
+# THE DECISIVE EXTERNAL FACT, worth stating because it is counter-intuitive: the CWE
+# catalogue itself marks CWE-200 - the canonical value for category 14, from which three of
+# the seven depart - as DISCOURAGED for mapping, on the stated grounds that confidentiality
+# loss is a technical impact rather than a root-cause error, with the instruction "If an
+# error or mistake causes information to be disclosed, then use the CWE ID for that error."
+# All three category 14 deviations therefore move TOWARD the catalogue's own guidance.
+# TWO CANDOUR POINTS carried into the census rather than smoothed over: CWE-522 is a
+# SIBLING of CWE-200 (both are children of CWE-668), not a descendant, so it is narrower in
+# subject matter and not lower in the same lineage; and CWE-1049 is a PARTIAL fit whose
+# name and Reduce-Performance consequence match the finding while its description narrows
+# to "a large number of joins and sub-queries" and its CISQ defaults of one million rows,
+# five joins and three sub-queries are NOT met by a join-free over-fetch. CWE-1049 is still
+# correct over CWE-200 because CWE-200 requires exposure "to an actor" and on that path the
+# surplus rows never leave the process, and the finding is emitted at severity low with
+# gateBlocking false, which is the honest weight for a fit of that strength.
+# VERIFIED: the pairing comparison re-run over all 40 records finds 7 deviations and 0
+# undocumented (was 4); all seven file:line citations in the new census were re-opened from
+# disk and all seven resolve and are in range; check 7 (categories 1-19), check 8
+# (gateBlocking on 40/40, non-blank demotionReason on 40/40) and check 16 (all 40 pairs
+# anchored, re-proved against an independently rebuilt 6,564-pair anchor set) all pass.
+#
+# ---------------------------------------------------------------------------
+# 23.8  WHAT THIS PASS DELIBERATELY DID NOT CHANGE
+# ---------------------------------------------------------------------------
+# The assessment is read-only by mandate, and a remediation pass over its own artifacts is
+# the point at which that mandate is easiest to erode. It did not erode:
+#   * ZERO application source files, manifests, lockfiles, workflows, container definitions,
+#     lint configurations or hook scripts were modified. The only tracked non-artifact file
+#     this assessment has ever touched remains .gitignore, by one additive entry, and this
+#     pass did not touch even that.
+#   * No finding was added, removed, suppressed, re-severitied or re-CWE'd. Counts are
+#     unchanged: Layer 1 126, Layer 2 463, Layer 3b 40, Layer 4 259 - 888 findings.
+#   * The gate-blocking set is unchanged at 16 Layer 3b findings. No demotion was created
+#     or withdrawn, and no demotionReason was weakened.
+#   * The raw-to-normalized accounting is unchanged and was re-proved, not assumed: 463 raw
+#     SARIF results to 463 normalized with 0 suppressed and multiset identity in both
+#     directions, and 259 deduplicated OSV records with an identical dedup_key multiset
+#     before and after the re-sort.
+#   * Every severity in Layer 4 was re-derived from the preserved raw scan through the CVSS
+#     bands - 256 group_max records, 0 mismatches - so the corrected low count is a
+#     corrected DECLARATION, not a re-scored finding.
+#   * No secret value was introduced. The five re-labelled secrets-pack descriptions state
+#     credential CLASS and location only, as they already did.
+#   * findings-layer-1-arch.json and findings-layer-3b-taint.json are byte-identical to
+#     their pre-pass state, and the four inventories, both raw scan outputs, the three
+#     rule packs, the profile, the two coverage files and layer-status.json are all
+#     byte-identical - proved by digest in 23.9, not asserted.
+#
+# ---------------------------------------------------------------------------
+# 23.9  BYTE COUNTS AND DIGESTS, RE-MEASURED AFTER THIS PASS (supersedes 22.8)
+# ---------------------------------------------------------------------------
+# Re-derive any row with:
+#   python3 -c "import hashlib,sys;d=open(sys.argv[1],'rb').read();print(len(d),hashlib.sha256(d).hexdigest())" security-audit/<file>
+# The status column is relative to the 22.8 ledger, so it reports what THIS pass changed -
+# not what the previous pass changed. Exactly TWO artifacts changed; the other seventeen
+# rows were re-measured off disk after the final write and are reproduced by measurement,
+# never by copying a 22.8 value forward.
+  codebase-profile.txt                18092 B  ed3e980cbeea185409a94d5e4fe30ba8b0e40b72b9a0660aff0880549ebff64a  LF-terminated          same
+  sink-inventory.txt                 831765 B  df79812763435327f7e5b4f7443cd32380cea831a3cfeb6b06293c2c1d1b3b27  LF-terminated          same
+  sink-inventory-test.txt            547180 B  f22d520cf975a62934e4fe40ea465b14974eba8ecd59f17debd3b5d32f29f193  LF-terminated          same
+  mitigation-inventory.txt           462838 B  2b9c96a8838a3554f823fa0b70e1ea6ce537a51e6a0e24d7d0751a8d6a66fa1f  LF-terminated          same
+  mitigation-inventory-test.txt       14913 B  9ed6954fe93526b646195c3b7461d99bf450dd7fbf83b45770e6f5df4a27bfa8  LF-terminated          same
+  results-semgrep.sarif             1785873 B  67e2663510e09b3f4085d344bd80314fc9fd35e9086c59ecb2e63a6a4c1202ff  no terminating newline same
+  results-semgrep.json              1363976 B  f4a3238c8af43333c1a6702ae5fbb9bef5505ed3911d2ecdd6f96df426d003ef  no terminating newline same
+  results-osv.json                  2828403 B  1e78d81aae6ca5739c7e10e85770c1ae87479f742463de0279d88ee82ef3ed5d  LF-terminated          same
+  findings-layer-1-arch.json          45087 B  a5b5372d195f69b4c426a46c7f4ca1396e54f71c59ae66efc924146fdb17d971  LF-terminated          same
+  findings-layer-2-semgrep.json      423065 B  d81a4fcc4a23ad7b86114a9a599396f6e3224cad770409b4cb1b5016d07df362  LF-terminated          CHANGED
+  findings-layer-3b-taint.json        62968 B  b35fee465261d2bdd6a325e87d50bbec2ae77abb70fa1b5b8501a152aa93b698  LF-terminated          same
+  findings-layer-4-osv.json          408628 B  f1ef85a9d22b7b4ada6c95a96504153e55c88659698e5a1f13254ae089e293e9  LF-terminated          CHANGED
+  layer-status.json                    3546 B  65e78115743c37b16589f065bda40d596ebf73d76715cabfdf32b2b731f7fb11  no terminating newline same
+  rules/security-audit.yaml          473625 B  b109a039df712f30c6d3e25e1e8358053fd0f1c91b92d0e8d2871cd141fe602f  LF-terminated          same
+  rules/secrets.yaml                  89772 B  139b35ad3442bc83d1f0864db82fa4fdc7e1f1ee4b5ac872bfbeb604c82c6518  LF-terminated          same
+  rules/owasp-top-ten.yaml          1448110 B  f0a4662179ed026409026367c8942e8a5c6da19de0ebfb8fe4127526535cd317  LF-terminated          same
+  coverage-layer-1.txt                  858 B  5a0d44a7949a5758d1dce96c85ee566290dd6371170327721a938d7a3b57015f  LF-terminated          same
+  coverage-layer-3b.txt                1433 B  efd32c70fd1d2dea49a25a4a62f96f95130be635cfe62c0e8f7393b6b893297d  LF-terminated          same
+  run-metadata.txt                 (this file - a file cannot carry its own digest)
+#
+# THE TWO CHANGED ROWS, WITH THE SUPERSEDED VALUES RETAINED AS THE AUDIT TRAIL:
+#   findings-layer-2-semgrep.json  423070 B / bf4616e98f95e0670df2f209e0b580d5bed0a773ef4ca73dcef87931e422cdb3
+#                               -> 423065 B / d81a4fcc4a23ad7b86114a9a599396f6e3224cad770409b4cb1b5016d07df362
+#     Net -5 bytes, and all five come from one edit: "condensed_from_sarif_message" (28
+#     characters) -> "expanded_from_sarif_message" (27) on five records is -1 byte each
+#     (23.2). The other two corrections are exactly size-neutral - sarif_message_chars
+#     249 -> 250 keeps its three digits (23.1), and :34 -> :35 keeps its two (23.3) - which
+#     is why the size delta alone would understate what changed and the digest is the real
+#     witness. Record count, key set, key order and every other field are unchanged.
+#   findings-layer-4-osv.json      408631 B / b7cc091672e4ab712b3d0fc1f55a4a761ad5d02d1a2bf440156e56fca629d065
+#                               -> 408628 B / f1ef85a9d22b7b4ada6c95a96504153e55c88659698e5a1f13254ae089e293e9
+#     Net -3 bytes, entirely from the one description rewrite 181 -> 178 characters (23.6).
+#     The re-ordering (23.4) is byte-neutral in aggregate because it permutes records
+#     without altering any of them; it changes the digest without changing the size.
+# NEWLINE CONVENTION unchanged and re-verified byte-wise: results-semgrep.sarif,
+# results-semgrep.json and layer-status.json carry no terminating newline; every other
+# artifact carries exactly one LF.
+# ANSI ESCAPE BYTES: 0x1b occurs 0 times in every file in security-audit/, including
+# rules/ and this file, verified by a byte scan of the whole directory after the final
+# write - which is AAP verification check 12. Also 0 BOM, 0 CR and 0 NUL bytes anywhere.
+# NON-ASCII CHARACTER counts, re-measured (characters, not bytes - the 21.1 convention),
+# unchanged by this pass in every row:
+#   sink-inventory.txt                  128
+#   sink-inventory-test.txt              11
+#   mitigation-inventory.txt              2
+#   results-semgrep.sarif               415
+#   results-semgrep.json                394
+#   results-osv.json                   2239
+#   findings-layer-4-osv.json             4
+#   coverage-layer-1.txt                 10
+#   coverage-layer-3b.txt                19
+#   findings-layer-1-arch.json / findings-layer-2-semgrep.json / findings-layer-3b-taint.json
+#   / mitigation-inventory-test.txt / codebase-profile.txt / layer-status.json / all three
+#   rule packs / run-metadata.txt: 0
 # ============================================ end of run-metadata.txt ========
