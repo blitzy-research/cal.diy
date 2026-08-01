@@ -11671,4 +11671,374 @@ secret_values_in_artifacts: none. The one high-entropy template value is cited b
 #    survival test, the severity-map skew, the ledger's distinguish-succeeded-from-never-ran purpose and the
 #    exit-code-is-not-the-signal rule - is unchanged and is now stated without the label.
 # Nothing else in this file is affected. No earlier line was edited or removed.
+#
+# =============================================================================
+# SECTION 26 - POST-REVIEW REMEDIATION PASS: THE DIRECTIVE 10 HARNESS, STATUS
+#              TEMPORAL INTEGRITY, BASELINE PUBLICATION ORDER, THE ERROR
+#              SENTINEL, INVENTORY DELIMITER SAFETY, AND THE TRUST BOUNDARY
+# (supersedes, by name, the statements listed under 26.6)
+# =============================================================================
+# WHY THIS SECTION EXISTS AND WHAT IT OUTRANKS. A review pass over the published set raised
+# six MAJOR findings. Five are contract and framing defects - a claim the artifacts could not
+# support, an ordering that was unsafe, an escape hatch that could not be taken, a parse
+# precondition that was never stated, and a trust claim that overreached. The sixth is a
+# genuine missing deliverable: the Directive 10 verification suite had never been generated
+# or executed, so the merged report asserted a final verification state with no authoritative
+# producer behind it. This pass generates and executes that suite and repairs the five
+# contracts. Nothing measured changed: no layer re-ran, no rule pack was re-fetched, no scan
+# was repeated, no finding was added, removed or reclassified, and no severity, cwe, file,
+# line, category or gateBlocking value was altered anywhere. As everywhere else in this file,
+# NO EARLIER LINE WAS EDITED OR REMOVED - the statements this pass invalidates are superseded
+# by name in 26.6, the same discipline 25.7 used against 23.9 and 24.2.
+#
+# ---------------------------------------------------------------------------
+# 26.1  THE SIX FINDINGS AND WHAT WAS DONE ABOUT EACH
+# ---------------------------------------------------------------------------
+finding_1_verification_integration: The merged report carried verification_status PASS,
+  verification.executed true and sixteen PASS outcomes attributed to an ad-hoc harness, while
+  security-audit/verify.sh and security-audit/verify-output.txt did not exist. RESOLVED by
+  generating the canonical harness, executing it, capturing its output, and rewriting the
+  verification record from that capture. The record now names the harness and the capture by
+  path, records both sha256 digests and byte counts, and carries a protocol object encoding
+  the two-stage remedy: stage 1 emits the report with verification_status PENDING and no check
+  outcomes; stage 2 has the orchestrator - never the harness - run the harness read-only,
+  capture through the ANSI-stripping stage and update the record in one atomic temp-write-and-
+  rename; stage 3 re-runs against the final tree and requires a byte-identical capture.
+  Separation of duties is stated explicitly: the harness decides the outcomes and the
+  orchestrator records them, so a passing verdict cannot be self-inserted by the artifact
+  being verified. The exemption that kept both files out of the gate's required-artifact set
+  is DELETED, not narrowed: required_artifacts went from 12 entries to 14 and
+  excluded_from_required_set is now empty.
+finding_2_status_temporal_integrity: layer-status.json asserted as historical fact that every
+  status was written only after its layer's criterion completed. Git contradicts that for
+  three of the six layers. RESOLVED by restating write_discipline as a NORMATIVE RULE that
+  explicitly disclaims being a historical assertion, and by adding two records: an
+  append-only status_publication_events log carrying one evidence-bound event per layer, and
+  a write_discipline_conformance record whose verdict is PARTIAL and which names all three
+  deviations plus a continuity break. The ten top-level status keys are now DERIVED from those
+  events by a stated rule, and the derivation was verified mechanically - the derived key set
+  equals the published key set exactly, ten of ten.
+finding_3_baseline_publication_order: The CURRENT baseline snapshot was committed 36m33s
+  before the merged report it belongs to and before any verification existed, so a crash in
+  that interval would have promoted an incomplete run as the next run's comparand. RESOLVED by
+  adding a publication_lifecycle record with five ordered phases - read and retain the trusted
+  PRIOR, hold the CURRENT candidate unpublished, merge, verify, then publish atomically by
+  temp-write-and-rename - four withholding conditions, and a withhold effect that preserves
+  the PRIOR snapshot byte for byte. The snapshot is re-published only after the merged report
+  exists and the harness has passed, and the four preconditions actually satisfied by this run
+  are recorded with their evidence. generated_at, which records when the counts were computed,
+  is now distinguished from published_at, which records when publication was permitted.
+finding_4_error_layer_escape_hatch: Both the baseline's run_id recipe and the merged report's
+  input-digest map were written as an unconditional read of four concrete files, while the
+  count rule beside each of them allowed a documented-ERROR layer's artifact to be absent. The
+  advertised escape hatch would therefore have failed on a read before the reconciliation that
+  permits the absence could run. RESOLVED by making both contracts status-first: each layer's
+  status is resolved from the ledger BEFORE any attempt to open, stat or probe that layer's
+  artifact, and an ERROR layer's slot carries the deterministic US-ASCII sentinel
+  ERROR:<ledger short-form key> in place of file bytes or a hex digest. The slot is never
+  omitted and never null or empty, because either would make an ERROR layer indistinguishable
+  from a genuinely empty artifact. The same layer contributes zero to every count, no records
+  to the merged body, fires the gate ERROR branch, and withholds baseline publication. An
+  artifact absent WITHOUT a documented ERROR remains a hard abort.
+finding_5_inventory_delimiter_safety: The row format <file>:<line>:<category>:<text> has no
+  escaping mechanism, and both the ledger and the merged report treated it as unambiguous. A
+  legal tracked path containing a colon - evil:1:19:.ts is the worked example - makes a
+  genuine category-3 row parse as path evil, line 1, category 19, and the row remains
+  format-valid, so the parse can fabricate coverage for an empty category and clear a
+  zero-entry category that should have fired the ERROR branch. RESOLVED by adding a
+  path_safety criterion to the producing layer's ledger record and a matching
+  inventory_parse_contract to the merged report's ERROR branch, adjacent to the computation at
+  risk. Both state the precondition - no colon, CR, LF, NUL or any byte in 0x00-0x1F or 0x7F -
+  and both FAIL CLOSED: one violating path sets Layer 3a to ERROR, the inventories are not
+  accepted as a basis for Layer 3b anchoring or category coverage, the precondition is never
+  waived, no row is silently dropped and no row is re-encoded to make it parse. The
+  first-three-colon parse rule is stated so the text field keeps every colon it legitimately
+  contains, and an on-disk round-trip guard is added because that is what catches a mangled
+  parse whose resulting path is itself delimiter-free.
+finding_6_trust_boundary: All three JSON artifacts attested themselves with digests stored in
+  the same mutable checkout they describe, which proves consistency and not authenticity: an
+  author able to rewrite an artifact is equally able to rewrite its digest, the ledger, the
+  merged verdict and the harness, and the rewritten set would verify clean. RESOLVED by adding
+  a trust_boundary record to each of the three artifacts, each separating the claim it does
+  support from the claim it does not, naming the concrete attack it closes, and stating the
+  requirements on a consuming gate: regenerate in a trusted context the branch under review
+  cannot write, bound to the audited revision; obtain the expected digests over a channel the
+  branch cannot write; reject a branch-supplied precomputed gate outright rather than reading
+  its value; load the PRIOR baseline only from a protected base branch or an immutable
+  artifact store keyed to its producing commit, and treat an unverifiable PRIOR as ABSENT
+  rather than trusted; and resolve any provenance mismatch to ERROR, which outranks BLOCK,
+  WARN and PASS. The harness states the same limit at the point of measurement: check 15's
+  PASS line says in terms that re-measuring the manifest establishes internal consistency and
+  not authenticity, because the manifest lives in the same tree it describes. Because this
+  audit is read-only and adds no pipeline wiring, these requirements are stated normatively
+  rather than implemented; implementing them means changing CI, which is outside this work.
+#
+# ---------------------------------------------------------------------------
+# 26.2  THE DIRECTIVE 10 HARNESS: PROVENANCE, EXECUTION AND ADVERSARIAL VALIDATION
+# ---------------------------------------------------------------------------
+harness_path: security-audit/verify.sh
+harness_language: Bash with inline python3; zero jq invocations, because jq is deliberately
+  absent from this host and every JSON assertion must therefore be written in Python
+harness_lines: 935
+harness_mode: 0755
+harness_argument: the audit directory, positional 1, defaulting to the script's own directory
+harness_invocation: bash security-audit/verify.sh security-audit, stdout and stderr merged,
+  passed through an ANSI-stripping stage, redirected to security-audit/verify-output.txt, with
+  the harness exit code taken from the first element of the pipeline status. The audit
+  directory is passed as a RELATIVE path so no host-specific path can reach the capture.
+harness_execution_result: 16 of 16 checks PASS, exit code 0
+harness_output_lines: 16, one per check, numbered 1 through 16 in order, every line matching
+  the contract PASS <N>: <reason> or FAIL <N>: <reason> with a non-empty reason
+harness_output_determinism: two consecutive captures are byte-identical; the capture was also
+  re-taken after every artifact write in this pass and after the merged report's verification
+  record was finalized, and came back byte-identical each time
+harness_read_only: the harness opens artifacts and writes nothing but its own standard output
+  and standard error; it creates no file and mutates no artifact, which is why the capture can
+  be re-taken repeatedly without perturbing the tree
+harness_self_exclusion: check 12 scans every file under the audit directory for the escape
+  byte and excludes ONLY the harness, which must name that byte in order to search for it. The
+  harness source itself contains no literal escape byte: it derives the byte from a character
+  code, so the file is pure US-ASCII.
+harness_empty_reason_defect_closed: every JSON read is a guarded load whose failure emits an
+  explicit parse-error reason, and the emit path converts an empty reason into an explicit
+  defect failure, so no code path can print a bare FAIL with no explanation. An unexplained
+  failure would itself be a silent failure and is forbidden.
+harness_no_host_paths_in_reasons: OS errors are reported by their strerror or their exception
+  class name, never by the path that produced them, so a reason can never leak a host path.
+adversarial_negative_controls: 16 controls, each run against a disposable copy of the artifact
+  set, never against the published set. Every control produced the expected failures, every
+  reason was explicit, and across all sixteen there were zero empty reasons and zero host
+  paths. Results:
+  C01 delete the Layer 2 artifact and leave its status OK      -> exit 5, checks 3, 9, 11, 13, 15
+  C02 truncate the Layer 3b findings file                      -> exit 7, every reason a parse error
+  C03 delete every Layer 1 category 7 record                   -> exit 3, checks 2, 11, 15
+  C04 blank one demotionReason                                 -> exit 2, checks 8, 15
+  C05 out-of-vocabulary severity value                         -> exit 2, checks 9, 15
+  C06 perturb one by_layer count                               -> exit 1, check 11
+  C07 Layer 3b record not anchored in the sink inventory       -> exit 2, checks 15, 16
+  C08 inject an escape byte into a findings file               -> exit 2, checks 12, 15
+  C09 documented-ERROR Layer 2, fully reconciled               -> exit 0, CLEAN PASS
+  C10 delimiter-bearing inventory row evil:1:19:.ts:7:3:...    -> exit 2, checks 4, 15
+  C11 delete layer_3a_status from the ledger                   -> exit 1, check 15
+  C12 gate_verdict outside its closed set                      -> exit 1, check 14
+  C13 ledger status disagreeing with the merged summary        -> exit 1, check 15
+  C14 audit directory entirely absent                          -> exit 16, 16 explicit reasons
+  C15 audit directory copied outside any repository            -> exit 0, round-trip reported not evaluated
+  C16 default argument, invoked from an unrelated directory    -> exit 0, 16 PASS lines
+control_c09_significance: the documented-ERROR escape hatch produces a clean pass with exit 0.
+  A deleted layer artifact whose status is documented ERROR and whose expected counts are
+  reconciled is not a failure - which is exactly what checks 3, 10 and 11 are required to
+  permit, and confirms the hatch is reachable rather than theoretical.
+control_c10_significance: the spoofed row was caught by the on-disk round-trip guard rather
+  than by the delimiter precondition, because the mangled parse yields the path evil, which
+  contains no delimiter. Both guards are therefore necessary; neither is redundant.
+#
+# ---------------------------------------------------------------------------
+# 26.3  STATUS PUBLICATION VERSUS CRITERION COMPLETION, MEASURED FROM GIT
+# ---------------------------------------------------------------------------
+# Method: for each of the six layers, the criterion stated on that layer's own ledger record
+# was re-evaluated mechanically against the artifact blobs present at every commit in the
+# range, and the earliest commit satisfying it was compared with the earliest commit whose
+# layer-status.json carried a status key for that layer. All times are git author timestamps
+# in UTC. Every value below is reproducible from git and none of it is inferred.
+measurement_range: e988138b24..1d43a0a09675eeb4637a8df3d061396bfd5fd0ef, 15 commits
+#   layer  criterion first satisfied            status first published               delta
+    0      182a703205  2026-07-31T00:12:43Z     182a703205  2026-07-31T00:12:43Z     0
+    2      b1b24b8716  2026-07-31T04:14:32Z     b1b24b8716  2026-07-31T04:14:32Z     0
+    3a     a49ab0c628  2026-07-31T05:04:10Z     b1b24b8716  2026-07-31T04:14:32Z     -2978 s
+    4      b1b24b8716  2026-07-31T04:14:32Z     b1b24b8716  2026-07-31T04:14:32Z     0
+    1      ebb1f4703d  2026-07-31T11:48:42Z     aa011182da  2026-07-31T23:35:04Z     +42382 s
+    3b     c47144592c  2026-07-31T12:08:26Z     aa011182da  2026-07-31T23:35:04Z     +41198 s
+deviation_wd1_layer_3a: the status was published 49m38s AHEAD of its criterion. layer_3a_status
+  was set to OK when the two primary inventories existed; the two test-partition inventories
+  the criterion also requires were added at a49ab0c628. This is the deviation that breaks
+  evidence-gating, because for 49m38s the ledger asserted OK for an unmet criterion.
+deviation_wd2_layer_1: the status was published 11h46m22s AFTER its criterion. Conservative
+  with respect to evidence-gating, since the status never ran ahead of its evidence, but the
+  ledger was silent about a completed layer for that whole window, during which a consumer
+  could not distinguish it from a layer that never ran. Note the criterion was NOT met at
+  c6a86ae2f4: the 66 findings there already covered categories 1-10, but coverage-layer-1.txt
+  held 115 lines instead of the mandated 10, and it was reduced to 10 at ebb1f4703d.
+deviation_wd3_layer_3b: the same class as WD2, silent for 11h26m38s. The criterion was NOT met
+  at ebb1f4703d: the 21 findings there already covered categories 1-19, but coverage-layer-3b
+  .txt held 118 lines instead of 19, and it was reduced to 19 at c47144592c.
+continuity_break: at aa5d7633ba, 2026-07-31T03:09:59Z, the ledger and the four other artifacts
+  published up to that point were deleted, so layer_0_status disappeared and the accumulated
+  write chain restarted; it was restored at b1b24b8716. An accumulated end state implies one
+  unbroken chain of writes, and this run had two.
+short_form_key_set_completion: all six short-form keys layer_0, layer_1, layer_2, layer_3a,
+  layer_3b and layer_4 were introduced in a single commit, aa011182da. Before it only the four
+  *_status keys existed, so the merged summary's six-key layer_status set could not have been
+  populated from the ledger without inventing keys.
+end_state_at_the_audited_revision: every one of the six criteria is satisfied, and every
+  published status is correct as an end state. The conformance verdict PARTIAL refers to the
+  ORDER in which statuses were published during the run, not to their correctness now.
+#
+# ---------------------------------------------------------------------------
+# 26.4  BYTE COUNTS AND DIGESTS, RE-MEASURED AFTER THIS PASS
+#       (supersedes the 25.5 table as CURRENT VALUES for the three rows marked CHANGED)
+# ---------------------------------------------------------------------------
+# Re-derive any row with:
+#   python3 -c "import hashlib,sys;d=open(sys.argv[1],'rb').read();print(len(d),hashlib.sha256(d).hexdigest())" security-audit/<file>
+# Five rows are listed. This pass wrote six files in total: the five below plus this
+# provenance record itself, which carries no row because a file cannot contain its own digest -
+# the same convention the 25.5 and 23.9 tables follow. The other seventeen
+# artifacts are the ledger's attested manifest and were NOT modified: all seventeen digests
+# were re-measured after the final write of this pass and all seventeen still match the values
+# 25.5 recorded, which is why the ledger's run_id is unchanged. Each CHANGED row is followed
+# by the superseded values, retained as the audit trail.
+  verify.sh                          42930 B  e97c3c821a9cb7ec7f17c7c20fe7d219fe4303f02be504dd1f438d768de950ac  LF-terminated          new row - artifact created by this pass
+  verify-output.txt                   3277 B  64f1b6ac9af59216b55622526ce27215b58992fd761caf95a96009818a926f23  LF-terminated          new row - artifact created by this pass
+  layer-status.json                  28507 B  2a158e144c9475ad51185232d91335168daf067e34de1a69ee21fb79334dd668  LF-terminated          CHANGED
+                                     was:  12104 B  6daf42af671b8b42a0617a81657fdcd92fe4942d416ccfea1e7f8c5ea345a54f  LF-terminated
+  baseline.json                      19607 B  597dd7125f18470ba1f85055a678f31ffea5ea012a8ddcf95809c5dedbad844a  LF-terminated          CHANGED
+                                     was:   9622 B  5ce192442991c8716f6121295eaf77445dd2fd498af300cf0f7b690c07ec11f3  LF-terminated
+  findings-merged.json              499983 B  1b8fbbb937224a9bff46ed2e165d850b33d767048fb5ea7b98725545bcf43b12  LF-terminated          CHANGED
+                                     was: 485293 B  deef8304cfa2712b676168df4b24315a117598ca4b4a10e17e5a9492811b4dd0  LF-terminated
+attested_manifest_recheck: 17 of 17 artifacts still match their recorded bytes and sha256.
+ledger_run_id_unchanged: 0c950465ffe6c1b7c1860e507331b7cf54ff67ccdba81a6c2c2949a9f4d3365d,
+  recomputed from the manifest listing after this pass.
+baseline_run_id_unchanged: fe80bf0d9cda5cea, recomputed by the NEW status-first recipe, which
+  reproduces the same value because no layer is documented ERROR on this run. Simulating a
+  documented-ERROR Layer 2 yields 35c051de2278e7ed with the Layer 2 artifact verifiably never
+  opened, which demonstrates the sentinel branch is reachable and distinguishable.
+merged_report_arithmetic_unchanged: 880 array elements - one summary header and 879 body
+  records - total_findings 888, unique_findings 879, corroborated 9, gate_blocking 16,
+  advisory 24, gate_verdict BLOCK, six layer statuses OK with zero drift against the ledger.
+#
+# ---------------------------------------------------------------------------
+# 26.5  READ-ONLY GUARANTEE AND SECRET REDACTION, RE-VERIFIED BY MEASUREMENT
+# ---------------------------------------------------------------------------
+read_only_guarantee: re-verified against the audited source revision rather than assumed. The
+  complete set of tracked changes is one modified file, .gitignore, plus additions under
+  security-audit/. No application source file, manifest, lockfile, workflow, container
+  definition, script, environment template or lint or hook configuration is modified by this
+  pass or by any earlier pass. No dependency was installed and no scanner autofix was run.
+gitignore_interaction: .gitignore line 119 ignores security-audit/, so the twenty-one
+  artifacts published before this pass are tracked only because they were force-added. The two
+  artifacts this pass creates are matched by that rule and must be force-added as well; a
+  plain add would silently skip them and the Directive 10 deliverable would be absent from the
+  commit while present on disk.
+secret_redaction: re-verified by measurement. The single high-entropy assigned value in the
+  tracked environment template is a 32-character base64-like CRON_API_KEY at .env.example
+  line 82. Every file under security-audit/ was searched for that literal value and it appears
+  in NONE of them. Findings cite the file, the line, the secret class and the length only.
+  This is mandatory rather than stylistic, because both example templates are git-tracked by
+  explicit negation, so a recorded value would be committed alongside the finding describing
+  it.
+artifact_hygiene: measured across all 23 files under security-audit/, and stated with the two
+  exceptions the measurement actually found rather than as a blanket claim.
+  escape_byte_0x1b: absent from all 23 files except security-audit/verify.sh, which must name
+    the byte in order to search for it and which derives it from a character code, so even the
+    harness holds no literal escape byte. This is verification check 12 and it passes.
+  carriage_return_and_nul: absent from all 23 files without exception.
+  other_control_bytes: present in exactly one artifact. sink-inventory.txt carries 137 TAB
+    bytes across 66 of its 6602 rows, and every one of them is the leading indentation of the
+    matched source line reproduced verbatim in the row's text field - for example the two
+    create( call sites in packages/features/notifications/services/InAppNotificationService.ts
+    and the two Math.random() call sites in scripts/seed-insights.ts. That is correct: the
+    mandated row format <file>:<line>:<category>:<text> requires the matched text, and
+    stripping or re-encoding it would falsify the evidence. A TAB is not an ANSI escape, check
+    12 forbids only 0x1b, and no other artifact carries any control byte outside its line
+    feeds.
+  json_serialization: the eight single-line JSON artifacts - baseline.json,
+    findings-merged.json, layer-status.json, the four normalized per-layer arrays and
+    results-semgrep.json - are each exactly one physical line with exactly one terminating line
+    feed. The two raw tool outputs are exempt by nature: results-semgrep.sarif is the scanner's
+    own bytes and carries no terminating newline, and results-osv.json is the scanner's own
+    pretty-printed bytes across 43743 lines. Both parse.
+  host_specific_paths: absent from every artifact this pipeline authors - the four normalized
+    per-layer arrays, findings-merged.json, layer-status.json, baseline.json,
+    codebase-profile.txt, both coverage files, all four inventories, verify.sh and
+    verify-output.txt. In particular findings-layer-4-osv.json carries no absolute path,
+    because the normalizer relativizes the lockfile path the scanner absolutizes. Three
+    categories of file legitimately contain such substrings and are NOT authored by this
+    pipeline or are deliberate provenance:
+    (a) results-osv.json - 53 occurrences of /tmp/, 6 of /home/ and 4 of /Users/, every one
+        inside upstream OSV advisory prose such as reproduction steps and proof-of-concept
+        harness locations. These are third-party database bytes preserved verbatim, which is
+        the point of keeping the raw output.
+    (b) results-semgrep.sarif and the three pinned rule packs - the /home/ occurrences are all
+        part of the reference URL https://www3.ntu.edu.sg/home/... and are not filesystem
+        paths at all, and the /tmp/ occurrences in rules/security-audit.yaml are Go rule
+        PATTERNS that match writes under /tmp, which is rule content rather than a host path.
+    (c) run-metadata.txt - two occurrences naming the analysis-tool install locations, which an
+        earlier section records as deliberate toolchain provenance.
+    No secret value, no credential and no host username appears anywhere in any of them.
+formatter_and_lint_gate_scope: recorded because the repository's sole linter and formatter,
+  biome 2.3.10, reports the audit directory's JSON artifacts as needing formatting, and that
+  report must be explained rather than either obeyed or ignored.
+  what_biome_reports: biome check over security-audit/ examines 8 files and flags all 8 as
+    needing formatting - baseline.json, findings-layer-1-arch.json,
+    findings-layer-2-semgrep.json, findings-layer-3b-taint.json, findings-layer-4-osv.json,
+    findings-merged.json, layer-status.json and results-semgrep.json. It flags no rule
+    violation; the sole complaint is formatting style.
+  it_is_pre_existing_and_structural: five of those eight artifacts were never written by this
+    pass and are attested unchanged, so the condition cannot have been introduced here. It was
+    confirmed directly on the pre-pass bytes: the three artifacts this pass rewrote were
+    extracted from HEAD to a scratch location outside the repository together with
+    findings-layer-1-arch.json, and biome flagged 4 of 4 exactly as it flags them now. The
+    condition is a property of the mandated serialization, not of any edit.
+  why_it_is_not_a_defect: the formatter's JSON style is multi-line pretty-printed with two-space
+    indentation. Directive 7 and the output constraints mandate the opposite - each JSON
+    artifact is a single minified line. A frozen requirement outranks a formatter default, so
+    the artifacts are correct and the formatter is simply out of agreement with them.
+  why_it_must_not_be_obeyed: running the formatter over these files would rewrite every one of
+    them, which would break the 17-entry attested digest manifest, change the ledger run_id
+    0c950465ffe6c1b7c1860e507331b7cf54ff67ccdba81a6c2c2949a9f4d3365d and the baseline run_id
+    fe80bf0d9cda5cea that are derived from those exact bytes, invalidate the merged report's
+    captured_output_sha256 binding, and force the whole verification fixpoint to be re-taken.
+    The artifacts were therefore NOT reformatted, and no formatter write was run against them.
+  no_gate_the_repository_runs_inspects_them: security-audit/ carries no package.json and
+    matches none of the workspace globs, so it is not a yarn workspace and the root lint task -
+    which is turbo lint with dependsOn ^lint, i.e. purely per-workspace - never visits it.
+    lint-staged declares exactly two patterns, (apps|packages|companion)/**/*.{js,ts,jsx,tsx}
+    and packages/prisma/schema.prisma, and none of the six changed paths matches either. The
+    husky pre-commit hook is not installed on this checkout: core.hooksPath is unset and
+    .git/hooks/pre-commit does not exist, so lint-staged would not run on commit even if a path
+    did match. The only installed hook is the standard Git LFS pre-push hook, and git-lfs 3.7.1
+    is present, so that hook is satisfied. The single path by which biome sees these files is
+    an explicit root-level invocation naming them, which is how the measurement above was
+    taken.
+  why_an_explicit_invocation_sees_them_at_all: biome.json declares no vcs block, so biome does
+    not honour .gitignore; its files.includes is **/* with an exclusion list that does not name
+    security-audit/. Two artifacts are nevertheless never examined: results-osv.json at
+    2828403 bytes exceeds files.maxSize 2097152, and results-semgrep.sarif carries an extension
+    biome does not parse as JSON.
+  harness_static_check: security-audit/verify.sh passes bash -n with no diagnostic. shellcheck
+    is not installed on this host, so bash -n is the available static check and it is clean.
+no_deferred_work: this pass introduces no placeholder, no stub, no TODO and no deferred item.
+  Every contract it adds is stated in full and every claim it makes was measured.
+#
+# ---------------------------------------------------------------------------
+# 26.6  WHAT THIS SECTION SUPERSEDES, BY NAME
+# ---------------------------------------------------------------------------
+# 1. The 21.5 sentence beginning "Nineteen artifacts are published" together with its
+#    statement that findings-merged.json, baseline.json, verify.sh and verify-output.txt "are
+#    NOT among them", and its consequent claim that only checks 1-10, 12, 13 and 16 can be
+#    evaluated. All four artifacts now exist and all sixteen checks were evaluated and pass.
+#    As a record of the scope at the checkpoint 21.x describes, the section remains true and
+#    is not disturbed; it is superseded only as a statement about the CURRENT published set.
+# 2. The 22.12 sentence stating that "findings-merged.json, baseline.json, verify.sh and
+#    verify-output.txt remain absent" and its consequent list of evaluable checks 1-10, 12, 13
+#    and 16, for the same reason and with the same limitation.
+# 3. The layer-status.json write_discipline text as published before this pass, which asserted
+#    ordered evidence-gating as a historical fact for all six layers, wherever an earlier
+#    section of this file quotes or paraphrases it. The normative rule it stated survives and
+#    is retained; only the historical assertion is withdrawn, and 26.3 replaces it with
+#    measurement.
+# 4. The baseline.json run_id_basis text as published before this pass, which described an
+#    unconditional read of all four normalized artifacts, wherever it is quoted. The
+#    identifier VALUE is unchanged at fe80bf0d9cda5cea; only the recipe's handling of a
+#    documented-ERROR layer is corrected.
+# 5. The merged report's verification.harness text naming an ad-hoc harness, its
+#    canonical_harness field describing where the capture "belongs", and the
+#    error_branch.exclusion_basis that exempted the two Directive 10 artifacts from the
+#    required set. The exemption is withdrawn rather than reworded, and required_artifacts now
+#    carries 14 entries.
+# 6. The 25.5 digest table, as CURRENT VALUES only, for the three artifacts 26.4 marks
+#    CHANGED. As a record of what the 25.x pass changed it remains true and is not disturbed;
+#    the current bytes are the 26.4 rows. The other seventeen rows in 25.5 are re-verified
+#    unchanged and are NOT superseded.
+# Nothing else in this file is affected. No earlier line was edited or removed.
 # ============================================ end of run-metadata.txt ========
