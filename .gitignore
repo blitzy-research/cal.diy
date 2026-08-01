@@ -116,4 +116,8 @@ specs/**/_drafts/
 agents/devin-knowledge.json
 
 # security audit artifacts
-security-audit/
+# Root-anchored on purpose: an unanchored 'security-audit/' matches a directory of
+# that name at ANY depth, so it would also ignore an unrelated apps/security-audit/
+# or packages/security-audit/ added later. The audit artifact root is exactly one
+# directory at the repository root, so the rule names exactly that one.
+/security-audit/
