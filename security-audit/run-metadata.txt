@@ -11355,4 +11355,320 @@ ledger_layer_2_disclosure_previously_asserted: the previous revision labelled th
 # 3. The one-line layer_status_ledger summary in SECTION 22.10, which enumerates the four
 #    deterministic keys. All four still read OK; the ledger simply carries six more.
 # Nothing else in this file is affected. No earlier line was edited or removed.
+# =============================================================================
+# SECTION 25 - POST-REVIEW REMEDIATION PASS: DESCRIPTION REQUALIFICATION,
+#              PROVENANCE BINDING, THE FIRST-RUN WARN BRANCH, AND THE
+#              CORROBORATION-COUNT CORRECTION
+# (supersedes, by name, the statements listed under 25.7)
+# =============================================================================
+# WHY THIS SECTION EXISTS AND WHAT IT OUTRANKS. A further review pass over the published
+# set raised findings against artifact TEXT and PROVENANCE FRAMING, not against any
+# measurement. Nothing measured changed in this pass: no layer re-ran, no rule pack was
+# re-fetched, no scan was repeated, no finding was added or removed, and no severity, cwe,
+# file, line, category or gateBlocking value was altered in any artifact. Every change
+# below is a description requalification, a rationale rewrite, a provenance binding or a
+# framing correction. As everywhere else in this file, NO EARLIER LINE WAS EDITED OR
+# REMOVED - the statements this pass invalidates are superseded by name in 25.7, the same
+# discipline 24.4 used against 13 and 22.10 used against 21.3.
+#
+# ---------------------------------------------------------------------------
+# 25.1  WHAT CHANGED, ARTIFACT BY ARTIFACT
+# ---------------------------------------------------------------------------
+# Each entry names the artifact, the exact field count touched, and the reason. The
+# field-level diff behind every count was taken against the previously published bytes:
+# record count, record order, per-record key set and every untouched field are identical.
+changed_findings_layer_1_arch: 1 description restated - the CRON_API_KEY value committed in
+  the tracked template at .env.example:82. The published text asserted that the template
+  value IS the secret the cron endpoints compare against; the evidence in this file supports
+  only that a real-looking 32-character base64-like key is committed in a git-tracked
+  template, which is the finding. Restated to exactly that claim. Class and length only -
+  the value remains withheld, which is E7 and is mandatory because the two example templates
+  are tracked by explicit negation. severity, cwe, file, line and category unchanged.
+changed_findings_layer_2_semgrep: 264 description fields requalified, each paired with its
+  description_derivation, which now reads qualified_from_sarif_message_with_source_context on
+  all 264. Composition: 255 workflow_call reachability restatements (a reusable workflow's
+  permission or injection condition is stated as what it is - a condition in a callable
+  workflow - rather than as a live exploit on every caller), 5 credential-placeholder
+  restatements (a placeholder in a template is not an active credential), 3 execution-path
+  restatements, and 1 test-only postMessage restatement whose description_summarized flag
+  moved false -> true because the requalified text is a summary rather than the raw scanner
+  message. The 13 requalifications already published in the previous pass are PRESERVED
+  unchanged; the two sets are disjoint by construction. No rule id, severity, cwe, file or
+  line changed, and the record count stays 463.
+changed_findings_layer_3b_taint: 17 demotionReason rationales rewritten. Four defects were
+  removed: internal labels that only this pipeline's own documents define (an ambiguity
+  code, a check number, a plan sub-section reference, an internal rule number) and that a
+  reviewer cannot resolve from the artifact; chronology of the analysis rather than the state
+  of the code; subjective wording where a verifiable predicate belongs; and catalogues of
+  unrelated defects appended to a rationale that is supposed to justify exactly one
+  demotion. Every rewritten rationale now names the covering mitigation by file and line and
+  states the single condition that caused the demotion, which is the requirement that it be
+  verifiable without re-reading code. 0 descriptions changed, 0 gateBlocking values changed
+  (16 blocking / 24 advisory before and after), every advisory still carries a non-empty
+  demotionReason, and each of the 16 blocking records still carries its No-demotion
+  explanation of the bypass, which is the truth table's broken-mitigation branch and not a
+  demotion.
+changed_results_semgrep_json: canonical projection adopted for the raw native document. The
+  two host-timing objects (time, profiling_results) are dropped, the retained arrays are
+  sorted on a stable key, a _canonicalization block records the transform, and the file now
+  ends with one LF. Proven content-neutral against the pre-projection bytes before adoption:
+  463 results and 50 errors before and after, the (rule id, path, start line, end line)
+  identity set equal, the scanned-path set equal, engine and version strings equal. The
+  document is retained as an enrichment source only - severity still comes from the SARIF
+  driver join - so a projection that preserves every result cannot move a normalized value,
+  and the 463 normalized Layer 2 records were re-derived against it to prove zero drift.
+changed_coverage_layer_1: rewritten into the frozen Directive 1 line format, one line per
+  category, bracketed category label then the mandated files-examined and findings-found
+  phrasing. 10 of 10 lines are strict-format valid where 0 of 10 were before, and the
+  findings column sums to 126, which is the record count of findings-layer-1-arch.json. This
+  also makes the ledger truthful: layer-status.json already CLAIMED the frozen format for
+  this artifact, so the artifact was the thing out of line with the ledger, not the ledger.
+changed_baseline: three corrections. (1) derivation.inputs is now exactly the four
+  normalized per-layer arrays; layer-status.json is demoted to documented_error_reference,
+  consulted only to learn which layers are documented ERROR so that such a layer contributes
+  zero, and contributing no count to any total. (2) The two temporal roles are now declared
+  rather than implied: role_in_this_run CURRENT snapshot, previous_baseline null,
+  previous_baseline_present false, first_run true, warn_branch_reachable_this_run false, plus
+  a consumer contract fixing the one-way order - read the PRIOR snapshot, decide the verdict,
+  then persist the CURRENT snapshot - so a run can never compare itself against itself and a
+  broken or partial run is never promoted to PRIOR. (3) run_id recomputed over the corrected
+  bytes of the four arrays, e0e29c55e36ca3d7 -> fe80bf0d9cda5cea, with the full
+  reproduction command recorded in run_id_basis. Counts are untouched: total_findings 888.
+changed_layer_status: the ledger is now BOUND to the run it describes, under the existing
+  non-layer_-prefixed ledger container so the harness safety invariant of 24.1 still holds.
+  ledger.provenance carries: audited_source_revision e988138b24ffa49a0cd0f8dd7ac97caf2817fa1d
+  (the codebase state every layer measured, deliberately not the moving branch tip); a
+  content-derived run_id, sha256 over the newline-terminated listing of every attested output
+  as path plus sha256, sorted by path, which is 0c950465ffe6c1b7...;
+  per-output byte-size and sha256 bindings for the 17 attested upstream artifacts; the
+  attested scope with its exclusions and why - the ledger itself cannot carry its own digest,
+  baseline.json and findings-merged.json are downstream CONSUMERS of the ledger so binding
+  them here would invert the dependency direction, and this file is provenance narrative
+  rather than a layer output; and a FAIL-CLOSED consumer contract requiring a consumer to
+  re-measure every attested output and to resolve any missing artifact, digest mismatch,
+  absent status, out-of-vocabulary value or *_status-versus-short-form disagreement to ERROR,
+  never to OK and never by defaulting. That closes the failure mode in which a stale or
+  forged all-OK ledger is paired with stale layer artifacts to suppress the ERROR branch,
+  which outranks BLOCK, WARN and PASS.
+changed_findings_merged: five corrections, no re-merge. (1) 282 body fields mirrored from the
+  corrected layer artifacts - 264 Layer 2 descriptions, 1 Layer 1 description and 17 Layer 3b
+  demotionReason rationales - so merged body text and per-layer text remain identical
+  everywhere, which is the property a reviewer diffs. (2) gate.warn_branch no longer compares
+  this run against its own baseline: the published evaluation carried baseline_available true,
+  a baseline total of 888 against a current total of 888 and a 0.0 percent delta, which is
+  the overwrite-before-compare defect. It now records the true first-run state - PRIOR
+  snapshot absent, reachable false, prior_total_findings null, current_total_findings 888 -
+  and names the prohibition on self-comparison. The verdict is untouched: BLOCK, decided by
+  the block branch on 16 gate-blocking Layer 3b findings, and WARN could not have fired in
+  either framing. (3) The gate-blocking exploit for
+  apps/api/v2/src/filters/http-exception.filter.ts:21 is now conditional: the rejected
+  request's body and Authorization header are written to the process-wide log stream, and on
+  to the remote transport WHENEVER the Axiom token and dataset are configured. The published
+  text asserted remote egress unconditionally, which overstates a deployment-dependent
+  condition; the finding, its severity and its gateBlocking value are unchanged. (4)
+  provenance.generated_at_commit is replaced by a durable note: this report is written in the
+  same commit that publishes it and therefore cannot carry that commit's own hash, so the
+  measurement basis is audited_commit and the binding to the merged inputs is
+  counts.by_layer_input_sha256. (5) Those four input digests were refreshed to the corrected
+  arrays.
+changed_internal_label_hygiene: 17 label residues removed from authored prose across three artifacts, and one
+  ambiguity closed. findings-merged.json: nine texts requalified (the additive-category description, the
+  deduplication-scope basis, the intra-layer assertion, the dependency-survival note, the
+  no-fabricated-corroborations note, two fabrication statements, the body sort-key note, and four identical
+  severity notes on gate entries), one disclosure identifier renamed from a bare plan label to
+  severity-inflation, and one NEW key added - gate_blocking_findings_category_namespace - which states that
+  every gate entry is a Layer 3b record numbered 1-19 in the sink scheme, that the Layer 1 architectural
+  scheme 1-10 is a different namespace, and that a corroborating Layer 1 record keeps its own category in the
+  merged body. layer-status.json: three labels removed and replaced by the invariant they stood for.
+  baseline.json: five removed, including the role label and the severity-map attribution. The defect in every
+  case was the same: an identifier that only this pipeline's own planning documents define, embedded in prose
+  a durable consumer has to act on. Each replacement states the invariant itself, so the sentence is
+  verifiable from the artifact alone. Positional wording was removed with the same intent - a note that said
+  "the Layer 3b value above" now names the severity_layer_3b field, and one that said "each entry above" now
+  names merge.corroborations. No count, verdict, severity, cwe, file, line, category or gateBlocking value
+  changed, and the four checks that read this text - 9, 13, 14 and 15 - were re-run afterwards.
+unchanged_by_this_pass: results-semgrep.sarif, results-osv.json, findings-layer-4-osv.json,
+  codebase-profile.txt, coverage-layer-3b.txt, sink-inventory.txt, sink-inventory-test.txt,
+  mitigation-inventory.txt, mitigation-inventory-test.txt and all three pinned rule packs -
+  each re-measured off disk after the final write and byte-identical to its published digest,
+  which is the 25.5 table, not an assertion.
+#
+# ---------------------------------------------------------------------------
+# 25.2  THE DECISION SURFACE, RE-ASSERTED AFTER THE PASS
+# ---------------------------------------------------------------------------
+# Stated so that a reviewer can confirm in one place that a text pass moved no decision.
+decision_surface_record_counts: findings-layer-1-arch.json 126, findings-layer-2-semgrep.json
+  463, findings-layer-3b-taint.json 40, findings-layer-4-osv.json 259; sum 888.
+decision_surface_merged_arithmetic: total_findings 888, unique_findings 879, corroborated 9,
+  gate_blocking 16; merged body 879 records = 463 semgrep + 259 osv-scanner + 117 arch-audit
+  + 40 taint-analysis.
+decision_surface_by_severity_merged: {"critical": 78, "high": 561, "medium": 194, "low": 46} - re-counted off the body, not copied.
+decision_surface_layer_status: all six keys OK, ledger and merged summary in exact agreement.
+decision_surface_verdict: BLOCK, verification_status PASS.
+decision_surface_fields_never_touched: severity, cwe, file, line, category, layer, tool,
+  gateBlocking, corroborated_by - 0 edits in any artifact. 0 records added, 0 removed, 0
+  reordered.
+#
+# ---------------------------------------------------------------------------
+# 25.3  THE CORROBORATION COUNT CORRECTED: 2 -> 9
+# ---------------------------------------------------------------------------
+# Two statements in this file describe the container-USER pair as the assessment's ONLY
+# genuine corroboration and give the total as 2. That was true of the artifact set in which
+# they were written, whose Layer 1 array held 95 records and whose Layer 3b array held 34.
+# The published set carries 126 Layer 1 and 40 Layer 3b records, and the additional records
+# join with Layer 3b sinks on seven further (file, line, cwe) keys. The pair those two
+# statements describe is unchanged and still exact - both file:line locators and the L1+L2
+# join are correct - but the TOTAL they give is superseded. The count in the published merged
+# report is 9, and every one of the nine is a genuine cross-LAYER join on an identical
+# (file, line, cwe) key. None is intra-layer: deduplication is inter-layer only, which is why
+# no dependency finding can corroborate another dependency finding.
+corroborated_pairs_published: 9, enumerated (annotated record, then the layers that agree)
+  Dockerfile:94  CWE-250  semgrep + arch-audit
+  apps/api/v2/Dockerfile:26  CWE-250  semgrep + arch-audit
+  apps/api/v2/src/filters/http-exception.filter.ts:21  CWE-532  taint-analysis + arch-audit
+  apps/api/v2/src/middleware/request-ids/request-id.interceptor.ts:36  CWE-532  taint-analysis + arch-audit
+  apps/api/v2/src/middleware/request-ids/request-id.middleware.ts:24  CWE-532  taint-analysis + arch-audit
+  apps/api/v2/src/modules/conferencing/controllers/conferencing.controller.ts:151  CWE-843  taint-analysis + arch-audit
+  apps/api/v2/src/modules/oauth-clients/controllers/oauth-flow/oauth-flow.controller.ts:80  CWE-601  taint-analysis + arch-audit
+  packages/features/webhooks/lib/sendPayload.ts:373  CWE-918  taint-analysis + arch-audit
+  packages/features/webhooks/lib/service/WebhookService.ts:107  CWE-918  taint-analysis + arch-audit
+corroborated_pairs_composition: 2 pairs join Layer 2 with Layer 1 (the missing container USER
+  in both images, which remains the worked example of the merge algorithm), and 7 join Layer
+  3b with Layer 1 - three credential-logging sinks, one type-confusion sink, one open-redirect
+  sink and two webhook SSRF sinks. Every pair was re-derived from the published arrays for
+  this record rather than carried forward from any earlier count.
+#
+# ---------------------------------------------------------------------------
+# 25.4  WHY NO LAYER RE-RAN, AND WHAT THAT PRESERVES
+# ---------------------------------------------------------------------------
+# A text pass must not re-run a deterministic layer, because a re-run would replace the
+# measured evidence a reviewer has already checked with a fresh measurement that happens to
+# agree - or, worse, quietly disagree. The rule packs are pinned on disk and were not
+# re-fetched; the scanners were not re-invoked; the inventories were not re-swept; the
+# lockfile was not re-scanned. Consequently every exit code, wall-clock duration, files-
+# scanned count and tool version recorded earlier in this file still describes the run that
+# produced the published artifacts, and the audited revision remains
+# e988138b24ffa49a0cd0f8dd7ac97caf2817fa1d.
+read_only_guarantee_re_verified: 0 application source files, manifests, lockfiles, workflow
+  definitions or container definitions were modified by this pass. The only tracked file
+  outside security-audit/ this work has ever touched is .gitignore, and it is unchanged by
+  this pass - additive by one comment and one entry, as recorded earlier.
+#
+# ---------------------------------------------------------------------------
+# 25.5  BYTE COUNTS AND DIGESTS, RE-MEASURED AFTER THIS PASS
+#       (supersedes the 23.9 table as CURRENT VALUES, and the 24.2 framing rows)
+# ---------------------------------------------------------------------------
+# Re-derive any row with:
+#   python3 -c "import hashlib,sys;d=open(sys.argv[1],'rb').read();print(len(d),hashlib.sha256(d).hexdigest())" security-audit/<file>
+# The status column is relative to the 23.9 ledger. Six artifacts changed; two rows are new
+# because their artifacts were published after 23.9 was written; every other row was re-
+# measured off disk after the final write and is reproduced by measurement, never copied
+# forward. Each CHANGED row is followed by the superseded values, retained as the audit trail.
+  baseline.json                      9622 B  5ce192442991c8716f6121295eaf77445dd2fd498af300cf0f7b690c07ec11f3  LF-terminated          new row - not in 23.9
+  codebase-profile.txt              18092 B  ed3e980cbeea185409a94d5e4fe30ba8b0e40b72b9a0660aff0880549ebff64a  LF-terminated          same
+  coverage-layer-1.txt                708 B  1af61c613101ffa508a835937f83a76a3e169bb84500090c612b710f589f8626  LF-terminated          CHANGED
+                                     was:   858 B  5a0d44a7949a5758d1dce96c85ee566290dd6371170327721a938d7a3b57015f  LF-terminated
+  coverage-layer-3b.txt              1433 B  efd32c70fd1d2dea49a25a4a62f96f95130be635cfe62c0e8f7393b6b893297d  LF-terminated          same
+  findings-layer-1-arch.json        45077 B  2cf32fd842c21a3b4913081334c78b6a9d7f269028ae7e60d6ff871e779342b7  LF-terminated          CHANGED
+                                     was:   45087 B  a5b5372d195f69b4c426a46c7f4ca1396e54f71c59ae66efc924146fdb17d971  LF-terminated
+  findings-layer-2-semgrep.json    431628 B  43750c033d003964c3d2903d8f3ab12435af6b6e65836c42e84275ce807600c1  LF-terminated          CHANGED
+                                     was:   423065 B  d81a4fcc4a23ad7b86114a9a599396f6e3224cad770409b4cb1b5016d07df362  LF-terminated
+  findings-layer-3b-taint.json      61764 B  685c4f9ff16f163cd543f5d8fab4830d69fd519082a82f57ee21dafc81826fdf  LF-terminated          CHANGED
+                                     was:   62968 B  b35fee465261d2bdd6a325e87d50bbec2ae77abb70fa1b5b8501a152aa93b698  LF-terminated
+  findings-layer-4-osv.json        408628 B  f1ef85a9d22b7b4ada6c95a96504153e55c88659698e5a1f13254ae089e293e9  LF-terminated          same
+  findings-merged.json             485293 B  deef8304cfa2712b676168df4b24315a117598ca4b4a10e17e5a9492811b4dd0  LF-terminated          new row - not in 23.9
+  layer-status.json                 12104 B  6daf42af671b8b42a0617a81657fdcd92fe4942d416ccfea1e7f8c5ea345a54f  LF-terminated          CHANGED
+                                     was:   3546 B  65e78115743c37b16589f065bda40d596ebf73d76715cabfdf32b2b731f7fb11  no terminating newline
+  mitigation-inventory-test.txt     14913 B  9ed6954fe93526b646195c3b7461d99bf450dd7fbf83b45770e6f5df4a27bfa8  LF-terminated          same
+  mitigation-inventory.txt         462838 B  2b9c96a8838a3554f823fa0b70e1ea6ce537a51e6a0e24d7d0751a8d6a66fa1f  LF-terminated          same
+  results-osv.json                2828403 B  1e78d81aae6ca5739c7e10e85770c1ae87479f742463de0279d88ee82ef3ed5d  LF-terminated          same
+  results-semgrep.json            1354972 B  d9006d1149248c635979d34dececd934d1bb8c3e3effda3093082ec9f38018e9  LF-terminated          CHANGED
+                                     was:   1363976 B  f4a3238c8af43333c1a6702ae5fbb9bef5505ed3911d2ecdd6f96df426d003ef  no terminating newline
+  results-semgrep.sarif           1785873 B  67e2663510e09b3f4085d344bd80314fc9fd35e9086c59ecb2e63a6a4c1202ff  no terminating newline same
+  rules/owasp-top-ten.yaml        1448110 B  f0a4662179ed026409026367c8942e8a5c6da19de0ebfb8fe4127526535cd317  LF-terminated          same
+  rules/secrets.yaml                89772 B  139b35ad3442bc83d1f0864db82fa4fdc7e1f1ee4b5ac872bfbeb604c82c6518  LF-terminated          same
+  rules/security-audit.yaml        473625 B  b109a039df712f30c6d3e25e1e8358053fd0f1c91b92d0e8d2871cd141fe602f  LF-terminated          same
+  sink-inventory-test.txt          547180 B  f22d520cf975a62934e4fe40ea465b14974eba8ecd59f17debd3b5d32f29f193  LF-terminated          same
+  sink-inventory.txt               831765 B  df79812763435327f7e5b4f7443cd32380cea831a3cfeb6b06293c2c1d1b3b27  LF-terminated          same
+  run-metadata.txt              (this file - a file cannot carry its own digest)
+#
+# ---------------------------------------------------------------------------
+# 25.6  NEWLINE, ANSI, NON-ASCII, ABSOLUTE-PATH AND SECRET RE-VERIFICATION
+# ---------------------------------------------------------------------------
+newline_convention_now: exactly ONE artifact carries no terminating newline -
+  results-semgrep.sarif. results-semgrep.json gained its single LF in this pass and
+  layer-status.json gained its own in the previous pass, so the earlier statements that name
+  those two among the newline-free artifacts are superseded (25.7). Every other artifact
+  carries exactly one terminating LF.
+newline_versus_line_count_caution: LF-terminated does NOT mean single-line. The seven
+  minified JSON artifacts (the four findings arrays, findings-merged.json, layer-status.json,
+  baseline.json) and results-semgrep.json are each ONE physical line plus its terminator,
+  which is the single-line mandate. results-osv.json is the raw scanner document preserved
+  unmodified and is legitimately multi-line, as are the inventories, the coverage files, the
+  profile, the rule packs and this file.
+ansi_and_control_bytes: 0x1b occurs 0 times in every file under security-audit/, including
+  rules/ and this file, verified by a byte scan of the whole directory after the final write,
+  which is verification check 12. Also 0 BOM, 0 CR and 0 NUL bytes anywhere.
+non_ascii_characters_re_measured: characters, not bytes - the 21.1 convention. Only these
+  files contain any; every other artifact is 0.
+  coverage-layer-1.txt              10
+  coverage-layer-3b.txt             19
+  findings-layer-4-osv.json          4
+  findings-merged.json               4
+  mitigation-inventory.txt           2
+  results-osv.json                2239
+  results-semgrep.json             394
+  results-semgrep.sarif            415
+  sink-inventory-test.txt           11
+  sink-inventory.txt               128
+  coverage-layer-1.txt holds exactly 10, one dash character per mandated line, which is a
+  property of the frozen Directive 1 format and is expected. findings-merged.json holds the
+  same 4 as findings-layer-4-osv.json, mirrored with those records.
+absolute_paths_authored_by_this_pipeline: 0. Every path this pipeline authors - every finding locator,
+  every artifact reference, every inventory line and the dependency scanner's source path, which the scanner
+  absolutizes and the normalizer relativizes - is repository-relative. The audit host's checkout path appears
+  in no file under security-audit/, verified by a byte scan for it and for the three conventional absolute
+  roots named in the header of this file: 0 occurrences of the temp-directory prefix and 0 of the
+  administrative home root anywhere in the directory.
+absolute_looking_strings_that_are_third_party_content: the two RAW scanner documents and the pinned rule
+  packs do contain strings that begin with a conventional home root, and every one is upstream CONTENT
+  rather than a path on any machine this ran on. Measured: results-semgrep.sarif 4 and rules/owasp-top-ten.yaml
+  2 and rules/security-audit.yaml 1, all of them the path component of a published reference URL; and
+  results-osv.json 10, all of them reporter-supplied proof-of-concept paths quoted inside upstream advisory
+  prose. These files are byte-identical to their published digests (25.5) and this pass did not touch them, so
+  the strings are recorded here for precision rather than corrected: rewriting a third-party advisory or a
+  vendor rule pack would destroy the evidence those artifacts exist to preserve. The naming convention this
+  file declares in its header is separately re-verified: a grep for any of the three absolute-root literals
+  returns zero in THIS file.
+secret_values_in_artifacts: none. The one high-entropy template value is cited by file, line,
+  class and length only, and that citation is exactly what the 25.1 restatement narrowed.
+#
+# ---------------------------------------------------------------------------
+# 25.7  WHAT THIS SECTION SUPERSEDES, BY NAME
+# ---------------------------------------------------------------------------
+# 1. The two corroborated = 2 statements: cross_layer_corroboration_signal in the Layer 2
+#    scan record, and normalized_l2_merge_key_intersection_with_layer_1 in the Layer 2
+#    normalization record, together with the heading that calls that pair the assessment's
+#    only genuine corroboration. Their file:line pairs, their level, their CWE and their L1+L2
+#    join all stand unchanged; only the TOTAL is superseded, by 25.3.
+# 2. The 23.9 digest table, as CURRENT VALUES only, for the six artifacts 25.5 marks CHANGED.
+#    As a record of what the 23.x pass changed relative to 22.8 it remains true and is not
+#    disturbed; the current bytes are the 25.5 rows.
+# 3. The newline-convention sentence in 23.9 that lists results-semgrep.json and
+#    layer-status.json among the artifacts carrying no terminating newline. Only
+#    results-semgrep.sarif still does.
+# 4. The 24.2 framing rows ledger_bytes and ledger_sha256, which describe the ledger before it
+#    was bound to its run. The 25.5 row carries the current pair. Everything else in 24.2 -
+#    single physical line, one LF, 0 BOM/CR/NUL/0x1b, 0 non-ASCII, 0 absolute paths, no secret
+#    value - is re-verified and unchanged.
+# 5. The description_derivation and description text of the 264 Layer 2 records named in 25.1,
+#    the one Layer 1 description, and the 17 Layer 3b demotionReason rationales, wherever an
+#    earlier section quotes the superseded wording. The counts, locators and classifications
+#    those sections report are unaffected.
+# 6. Any earlier sentence that quotes the superseded label wording of the nine merged texts, the three ledger
+#    texts or the five baseline texts named in 25.1, including the disclosure identifier that carried a bare
+#    plan label. The substance those sentences report - the inter-layer-only rule, the dependency-record
+#    survival test, the severity-map skew, the ledger's distinguish-succeeded-from-never-ran purpose and the
+#    exit-code-is-not-the-signal rule - is unchanged and is now stated without the label.
+# Nothing else in this file is affected. No earlier line was edited or removed.
 # ============================================ end of run-metadata.txt ========
